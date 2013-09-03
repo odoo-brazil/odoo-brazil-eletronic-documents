@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+
+        <record model="ir.ui.view" id="l10n_br_inutilizacao_invoice_invalid_number_form">
+            <field name="name">l10n_br_account.invoice.invalid.number.form</field>
+            <field name="model">l10n_br_account.invoice.invalid.number</field>
+            <field name="type">form</field>
+            <field name="inherit_id" ref="l10n_br_account.l10n_br_account_invoice_invalid_number_form"/>
+            <field name="arch" type="xml">                
+                <header position="replace">
+                    <button name="action_draft_done"  colspan="2" string="Enviar SEFAZ" type="object" icon="gtk-convert" 
+                    	attrs="{'invisible':['|',('id','==', False),('status','==','done')]}"/>                    		 
+                    <field name="state" widget="statusbar" statusbar_visible="draft,not_authorized,done"/>
+                </header>
+                <field name="number_end" position="after">
+                	<field name="id" invisible="1"/>                    
+                    <field name="status" attrs="{'invisible':[('state','==','draft')]}"/>
+                    <field name="message" attrs="{'invisible':[('state','==','draft')]}"/>
+                    <field name="invalidate_number_nfe_invoice_id" attrs="{'invisible':[('state','==','draft')]}"/>                    
+                </field>                
+            </field>
+        </record>
+        
+        
+       <act_window id="envio_nfe_export_invoice" key2="client_action_multi"
+			name="Enviar NFe" res_model="l10n_br_account.nfe_export_invoice"
+			src_model="account.invoice" view_id="l10n_br_account.l10n_br_account_nfe_export_invoice_form"
+			view_mode="form" target="new" view_type="form" />
+		
+		<record model="ir.ui.view" id="view_l10n_br_envio_account_invoice_form">
+			<field name="name">l10n_br_envio_account.invoice.form</field>
+			<field name="model">account.invoice</field>
+			<field name="inherit_id" ref="account.invoice_form" />
+			<field name="arch" type="xml">
+				<button name="invoice_open" position="after">			
+					<button name="action_invoice_send_nfe" states="sefaz_export,sefaz_exception" string="Enviar NFe" class="oe_highlight" type="object" groups="base.group_user"/>
+				</button>
+				<field name="account_id" position="after">
+					<field name="send_nfe_invoice_id" mode="form"/>
+				</field>                
+           </field>
+        </record>        
+
+    </data>
+</openerp>
