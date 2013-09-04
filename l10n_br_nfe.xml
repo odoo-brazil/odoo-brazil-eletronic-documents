@@ -22,25 +22,67 @@
             </field>
         </record>
         
-        
-       <act_window id="envio_nfe_export_invoice" key2="client_action_multi"
-			name="Enviar NFe" res_model="l10n_br_account.nfe_export_invoice"
-			src_model="account.invoice" view_id="l10n_br_account.l10n_br_account_nfe_export_invoice_form"
-			view_mode="form" target="new" view_type="form" />
 		
 		<record model="ir.ui.view" id="view_l10n_br_envio_account_invoice_form">
 			<field name="name">l10n_br_envio_account.invoice.form</field>
 			<field name="model">account.invoice</field>
+			<field name="priority">32</field>
 			<field name="inherit_id" ref="account.invoice_form" />
 			<field name="arch" type="xml">
-				<button name="invoice_open" position="after">			
-					<button name="action_invoice_send_nfe" states="sefaz_export,sefaz_exception" string="Enviar NFe" class="oe_highlight" type="object" groups="base.group_user"/>
+				<button name="invoice_open" position="replace">			
+					<button name="action_open_window_send_nfe" states="sefaz_export,sefaz_exception" string="Enviar NFe" class="oe_highlight" type="object" groups="base.group_user"/>
 				</button>
 				<field name="account_id" position="after">
 					<field name="send_nfe_invoice_id" mode="form"/>
 				</field>                
            </field>
         </record>        
+       
+      
+        <record id="account.act_open" model="workflow.activity">
+            <field name="wkf_id" ref="account.wkf"/>
+            <field name="name">open</field>
+            <field name="action">
+            	action_invoice_send_nfe()
+            	write({'state':'open'})</field>
+            <field name="kind">function</field>
+        </record>
+
+
+		<record id="l10n_br_nfe_send_invoice" model="ir.ui.view">
+			<field name="name">Enviar Nota Fiscal</field>
+			<field name="model">l10n_br_nfe.send_sefaz</field>
+			<field name="arch" type="xml">
+				<form string="Enviar Nota Fiscal" version="7.0">
+					<field invisible="1" name="state"/>
+					<field name="name" invisible="1" />
+					<group>
+						<group states="init" string="Clique em enviar para iniciar o envio...">
+							<field name="name" />
+							<field name="nfe_environment" />														
+						</group>
+						<group states="done" string="Resultado do Envio">
+							<field nolabel="1" readonly="1" colspan="4" name="nfe_export_result">
+								<tree colors="green:status == 'success';red:status == 'error'">
+									<field name="xml_type"/>
+									<field name="message"/>
+									<field name="status"/>
+								</tree>
+							</field>
+							<field name="file" colspan="4" filename="name"  />
+						</group>
+					</group>
+						<footer states="init">
+							<button name="invoice_open" string="Enviar SEFAZ" class="oe_highlight" />
+	                        <button special="cancel" string="Cancelar" type="object" class="oe_link"/>
+                    	</footer>
+	                    <footer states="done">
+	                        <button special="cancel" string="Close" type="object"/>
+	                    </footer>
+				</form>
+			</field>
+		</record>
+
 
     </data>
 </openerp>

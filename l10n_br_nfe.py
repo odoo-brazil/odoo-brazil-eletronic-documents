@@ -36,13 +36,34 @@ class l10n_br_nfe_send_sefaz(osv.Model):
         'nfe_environment': fields.selection(
             [('1', u'Produção'), ('2', u'Homologação')], 'Ambiente'),        
         'nfe_export_result': fields.one2many(
-            'l10n_br_account.nfe_export_invoice_result', 'wizard_id',
+            'l10n_br_nfe.send_sefaz_result', 'send_sefaz_id',
             'NFe Export Result'),        
     }
     _defaults = {
         'state': 'init',        
         'nfe_environment': '2',        
     }
+    
+    def open_window(self,cr, uid, ids, context=None):
+        mod_obj = self.pool.get('ir.model.data')
+        model_data_ids = mod_obj.search(
+            cr, uid, [('model', '=', 'ir.ui.view'),
+            ('name', '=', 'l10n_br_nfe_send_invoice')],
+            context=context)
+        resource_id = mod_obj.read(
+            cr, uid, model_data_ids,
+            fields=['res_id'], context=context)[0]['res_id']
+        
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': self._name,
+            'view_mode': 'form',
+            'view_type': 'form',
+            'res_id': ids[0],
+            'views': [(resource_id, 'form')],
+            'target': 'new',
+        }
+    
 
 class l10n_br_nfe_send_sefaz_result(osv.Model):
     _name = 'l10n_br_nfe.send_sefaz_result'
@@ -74,24 +95,27 @@ class account_invoice(osv.Model):
         'cancel_nfe_invoice_id': fields.many2one('l10n_br_nfe.send_sefaz', 'Cancelamento NFe'),
     }
     
-    def action_invoice_send_nfe(self, cr, uid, ids, context=None):
+    def action_send_nfe(self, cr, uid, ids, context=None):
+        pass
+    
+    def action_open_window_send_nfe(self, cr, uid, ids, context=None):
         invoices = self.browse(cr, uid, ids, context)
         for invoice in invoices:
-            nfe_export_pool = self.pool.get('l10n_br_account.nfe_export_invoice')
-            if not invoice.nfe_export_invoice_id:                                
-                nfe_export_id = nfe_export_pool.create(cr, uid, { 'name': 'Envio NFe'}, context)
-                self.write(cr, uid, ids, {'nfe_export_invoice_id': nfe_export_id})
+            nfe_send_pool = self.pool.get('l10n_br_nfe.send_sefaz')
+            if not invoice.send_nfe_invoice_id:                                
+                nfe_send_id = nfe_send_pool.create(cr, uid, { 'name': 'Envio NFe'}, context)
+                self.write(cr, uid, ids, {'send_nfe_invoice_id': nfe_send_id})
                 inv = self.browse(cr, uid, invoice.id)
-                return inv.nfe_export_invoice_id.open_window()
+                return inv.send_nfe_invoice_id.open_window()
                             
                         
-            result_pool =  self.pool.get('l10n_br_account.nfe_export_invoice_result')
-            for result_id in invoice.nfe_export_invoice_id.nfe_export_result:
+            result_pool =  self.pool.get('l10n_br_nfe.send_sefaz_result')
+            for result_id in invoice.send_nfe_invoice_id.nfe_export_result:
                 result_pool.unlink(cr, uid, result_id.id, context)           
                         
-            nfe_export_pool.write(cr, uid, invoice.nfe_export_invoice_id.id, {'state':'init', 'file':'', 'name':''})
-            return invoice.nfe_export_invoice_id.open_window()
-        
+            nfe_send_pool.write(cr, uid, invoice.send_nfe_invoice_id.id, {'state':'init', 'file':'', 'name':'Envio NFe'})
+            inv = self.browse(cr, uid, invoice.id)
+            return inv.send_nfe_invoice_id.open_window()        
         
     def action_cancel(self, cr, uid, ids, context=None):
         self.cancel_invoice_online(cr, uid, ids, context)
