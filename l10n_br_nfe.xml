@@ -43,8 +43,9 @@
             <field name="wkf_id" ref="account.wkf"/>
             <field name="name">open</field>
             <field name="action">            	
-            	action_invoice_send_nfe()            	
-             </field>
+            	action_invoice_send_nfe()
+            	write({'state':'open'})
+            	</field>
             <field name="kind">function</field>
         </record>
 

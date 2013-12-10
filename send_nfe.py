@@ -184,6 +184,7 @@ class SendNFe(object):
                     'status_code':status,'xml_sent': file_sent,'xml_result': file_result, 'status':'success'}
                             
                 if processo.webservice == webservices_flags.WS_NFE_CONSULTA_RECIBO:                
+                    resultado["status"] = "error"
                     for prot in processo.resposta.protNFe:
                         resultado["status_code"] = prot.infProt.cStat.valor
                         resultado["message"] = prot.infProt.xMotivo.valor
@@ -196,10 +197,9 @@ class SendNFe(object):
                                 'status_code':prot.infProt.cStat.valor,'xml_sent': danfe_pdf,
                                 'xml_result': nfe_xml , 'status':'success'}
                             
+                            resultado["status"] = "success"
                             result.append(danfe_nfe)
                             
-                        else:
-                            resultado["status"] = "error"
             else:
                 resultado = {'name':name,'name_result':name_result, 'message':processo.resposta.original, 'xml_type':type_xml, 
                     'status_code':processo.resposta.status,'xml_sent': file_sent,'xml_result': file_result, 'status':'error'}
@@ -325,7 +325,7 @@ class SendNFe(object):
             nfe.infNFe.emit.enderEmit.cMun.valor = '%s%s' % (company.state_id.ibge_code, company.l10n_br_city_id.ibge_code)
             nfe.infNFe.emit.enderEmit.xMun.valor = company.l10n_br_city_id.name or ''
             nfe.infNFe.emit.enderEmit.UF.valor = company.state_id.code or ''
-            nfe.infNFe.emit.enderEmit.CEP.valor = company.zip or ''
+            nfe.infNFe.emit.enderEmit.CEP.valor = re.sub('[%s]' % re.escape(string.punctuation), '', company.zip or '')
             nfe.infNFe.emit.enderEmit.cPais.valor = company.country_id.bc_code[1:]
             nfe.infNFe.emit.enderEmit.xPais.valor = company.country_id.name
             nfe.infNFe.emit.enderEmit.fone.valor = re.sub('[%s]' % re.escape(string.punctuation), '', str(company.phone or '').replace(' ',''))
