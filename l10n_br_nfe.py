@@ -26,7 +26,7 @@ class l10n_br_nfe_send_sefaz(osv.Model):
     """ Classe para salvar o retorno dos metodos de envio de cancelamento, inutilização e recepção de nota """
     _name = 'l10n_br_nfe.send_sefaz'
     _description = 'Envia os dados para o SEFAZ NFe'
-    _columns = {
+    _columns = {                
         'name': fields.char('Nome', size=255),
         'file': fields.binary('Xml processado', readonly=True),        
         'state': fields.selection(
@@ -43,26 +43,6 @@ class l10n_br_nfe_send_sefaz(osv.Model):
         'state': 'init',        
         'nfe_environment': '2',        
     }
-    
-    def open_window(self,cr, uid, ids, context=None):
-        mod_obj = self.pool.get('ir.model.data')
-        model_data_ids = mod_obj.search(
-            cr, uid, [('model', '=', 'ir.ui.view'),
-            ('name', '=', 'l10n_br_nfe_send_invoice')],
-            context=context)
-        resource_id = mod_obj.read(
-            cr, uid, model_data_ids,
-            fields=['res_id'], context=context)[0]['res_id']
-        
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': self._name,
-            'view_mode': 'form',
-            'view_type': 'form',
-            'res_id': ids[0],
-            'views': [(resource_id, 'form')],
-            'target': 'new',
-        }
     
 
 class l10n_br_nfe_send_sefaz_result(osv.Model):
@@ -119,25 +99,6 @@ class account_invoice(osv.Model):
                         'message':result['message']}, context)
         
         #raise Exception("Estou lançando exceção para não mudar de estado a Fatura")
-            
-    def action_open_window_send_nfe(self, cr, uid, ids, context=None):
-        invoices = self.browse(cr, uid, ids, context)
-        for invoice in invoices:
-            nfe_send_pool = self.pool.get('l10n_br_nfe.send_sefaz')
-            if not invoice.send_nfe_invoice_id:                                
-                nfe_send_id = nfe_send_pool.create(cr, uid, { 'name': 'Envio NFe'}, context)
-                self.write(cr, uid, ids, {'send_nfe_invoice_id': nfe_send_id})
-                inv = self.browse(cr, uid, invoice.id)
-                return inv.send_nfe_invoice_id.open_window()
-                            
-                        
-            result_pool =  self.pool.get('l10n_br_nfe.send_sefaz_result')
-            for result_id in invoice.send_nfe_invoice_id.nfe_export_result:
-                result_pool.unlink(cr, uid, result_id.id, context)           
-                        
-            nfe_send_pool.write(cr, uid, invoice.send_nfe_invoice_id.id, {'state':'init', 'file':'', 'name':'Envio NFe'})
-            inv = self.browse(cr, uid, invoice.id)
-            return inv.send_nfe_invoice_id.open_window()        
         
     def action_cancel(self, cr, uid, ids, context=None):
         self.cancel_invoice_online(cr, uid, ids, context)
@@ -273,23 +234,23 @@ def validate_nfe_invalidate_number(company, record):
         raise orm.except_orm(_('Validação !'), _(error)) 
     
 def validate_invoice_cancel(invoice):
-        error = u'Verifique os problemas com o cancelamento:\n'
-        if not invoice.nfe_access_key:
-            error += u'Nota Fiscal - Chave de acesso NF-e\n'
-        if not invoice.nfe_status:
-            error += u'Empresa - Protocolo de autorização na Sefaz\n'
-        if error != u'Verifique os problemas com o cancelamento:\n':
-            raise orm.except_orm(_('Validação !'), _(error))
+    error = u'Verifique os problemas com o cancelamento:\n'
+    if not invoice.nfe_access_key:
+        error += u'Nota Fiscal - Chave de acesso NF-e\n'
+    if not invoice.nfe_status:
+        error += u'Empresa - Protocolo de autorização na Sefaz\n'
+    if error != u'Verifique os problemas com o cancelamento:\n':
+        raise orm.except_orm(_('Validação !'), _(error))
 
 def validate_nfe_configuration(company):
-        error = u'As seguintes configurações estão faltando:\n'
-        if not company.nfe_version:
-            error += u'Empresa - Versão NF-e\n'
-        if not company.nfe_a1_file:
-            error += u'Empresa - Arquivo NF-e A1\n'
-        if not company.nfe_a1_password:
-            error += u'Empresa - Senha NF-e A1\n'
-        if not company.nfe_export_folder and company.save_xml_folder:
-            error += u'Empresa - Pasta de exportação\n'
-        if error != u'As seguintes configurações estão faltando:\n':
-            raise orm.except_orm(_('Validação !'), _(error))
+    error = u'As seguintes configurações estão faltando:\n'
+    if not company.nfe_version:
+        error += u'Empresa - Versão NF-e\n'
+    if not company.nfe_a1_file:
+        error += u'Empresa - Arquivo NF-e A1\n'
+    if not company.nfe_a1_password:
+        error += u'Empresa - Senha NF-e A1\n'
+    if not company.nfe_export_folder and company.save_xml_folder:
+        error += u'Empresa - Pasta de exportação\n'
+    if error != u'As seguintes configurações estão faltando:\n':
+        raise orm.except_orm(_('Validação !'), _(error))
