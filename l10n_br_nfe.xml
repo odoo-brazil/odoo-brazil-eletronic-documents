@@ -29,8 +29,8 @@
 			<field name="priority">32</field>
 			<field name="inherit_id" ref="account.invoice_form" />
 			<field name="arch" type="xml">
-				<button name="invoice_open" position="replace">			
-					<button name="action_open_window_send_nfe" states="sefaz_export,sefaz_exception" string="Enviar NFe" class="oe_highlight" type="object" groups="base.group_user"/>
+				<button name="invoice_open" position="replace">	
+					<button name="invoice_open" confirm="Confirma emissão da NF-e ?" states="sefaz_export,sefaz_exception" string="Enviar SEFAZ Direto" class="oe_highlight"  groups="base.group_user"/>
 				</button>
 				<field name="account_id" position="after">
 					<field name="send_nfe_invoice_id" mode="form"/>
@@ -42,9 +42,9 @@
         <record id="account.act_open" model="workflow.activity">
             <field name="wkf_id" ref="account.wkf"/>
             <field name="name">open</field>
-            <field name="action">
-            	action_invoice_send_nfe()
-            	write({'state':'open'})</field>
+            <field name="action">            	
+            	action_invoice_send_nfe()            	
+             </field>
             <field name="kind">function</field>
         </record>
 
@@ -73,7 +73,7 @@
 						</group>
 					</group>
 						<footer states="init">
-							<button name="invoice_open" string="Enviar SEFAZ" class="oe_highlight" />
+							<button name="invoice_open" string="Enviar SEFAZ" class="oe_highlight"/>
 	                        <button special="cancel" string="Cancelar" type="object" class="oe_link"/>
                     	</footer>
 	                    <footer states="done">

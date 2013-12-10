@@ -18,9 +18,9 @@
 ###############################################################################
 
 from openerp.osv import osv, fields, orm
-import pysped.nfe, base64, re
+import pysped.nfe, base64, re, datetime
 from openerp.tools.translate import _
-
+from send_nfe import SendNFe
 
 class l10n_br_nfe_send_sefaz(osv.Model):
     """ Classe para salvar o retorno dos metodos de envio de cancelamento, inutilização e recepção de nota """
@@ -95,9 +95,31 @@ class account_invoice(osv.Model):
         'cancel_nfe_invoice_id': fields.many2one('l10n_br_nfe.send_sefaz', 'Cancelamento NFe'),
     }
     
-    def action_send_nfe(self, cr, uid, ids, context=None):
-        pass
-    
+    def action_invoice_send_nfe(self, cr, uid, ids, context=None):
+        record = self.browse(cr, uid, ids[0])
+        company_pool = self.pool.get('res.company')        
+        company = company_pool.browse(cr, uid, record.company_id.id)
+        
+        validate_nfe_configuration(company)
+        
+        nfe_send_pool = self.pool.get('l10n_br_nfe.send_sefaz')
+        nfe_send_id = nfe_send_pool.create(cr, uid, { 'name': 'Envio NFe', 'start_date': datetime.datetime.now()}, context)
+        self.write(cr, uid, ids, {'send_nfe_invoice_id': nfe_send_id})
+        
+        envio = SendNFe()
+        resultados =  envio.send_nfe(cr, uid, ids, '2', context)
+        
+        nfe_send_pool.write(cr, uid, nfe_send_id,{ 'end_date': datetime.datetime.now(),'state':'done' }, context)
+        result_pool =  self.pool.get('l10n_br_nfe.send_sefaz_result')
+        for result in resultados:
+            result_pool.create(cr, uid, {'send_sefaz_id': nfe_send_id , 'xml_type': result['xml_type'], 
+                        'name':result['name'], 'file':base64.b64encode(result['xml_sent'].encode('utf8')), 
+                        'name_result':result['name_result'], 'file_result':base64.b64encode(result['xml_result'].encode('utf8')),
+                        'status':result['status'], 'status_code':result['status_code'], 
+                        'message':result['message']}, context)
+        
+        #raise Exception("Estou lançando exceção para não mudar de estado a Fatura")
+            
     def action_open_window_send_nfe(self, cr, uid, ids, context=None):
         invoices = self.browse(cr, uid, ids, context)
         for invoice in invoices:
