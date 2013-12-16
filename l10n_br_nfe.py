@@ -18,7 +18,7 @@
 ###############################################################################
 
 from openerp.osv import osv, fields, orm
-import pysped.nfe, base64, re, datetime
+import pysped.nfe, base64, re, datetime, netsvc
 from openerp.tools.translate import _
 from send_nfe import SendNFe
 
@@ -86,19 +86,39 @@ class account_invoice(osv.Model):
         nfe_send_id = nfe_send_pool.create(cr, uid, { 'name': 'Envio NFe', 'start_date': datetime.datetime.now()}, context)
         self.write(cr, uid, ids, {'send_nfe_invoice_id': nfe_send_id})
         
-        envio = SendNFe()
-        resultados =  envio.send_nfe(cr, uid, ids, '2', context)
+        erros = False   
+        chave_nfe = ''
+        status_sefaz = ''                     
+        try:
+            envio = SendNFe()
+            resultados =  envio.send_nfe(cr, uid, ids, '2', context)
         
-        nfe_send_pool.write(cr, uid, nfe_send_id,{ 'end_date': datetime.datetime.now(),'state':'done' }, context)
-        result_pool =  self.pool.get('l10n_br_nfe.send_sefaz_result')
-        for result in resultados:
-            result_pool.create(cr, uid, {'send_sefaz_id': nfe_send_id , 'xml_type': result['xml_type'], 
-                        'name':result['name'], 'file':base64.b64encode(result['xml_sent'].encode('utf8')), 
-                        'name_result':result['name_result'], 'file_result':base64.b64encode(result['xml_result'].encode('utf8')),
-                        'status':result['status'], 'status_code':result['status_code'], 
-                        'message':result['message']}, context)
+            nfe_send_pool.write(cr, uid, nfe_send_id,{ 'end_date': datetime.datetime.now(),'state':'done' }, context)
+            result_pool =  self.pool.get('l10n_br_nfe.send_sefaz_result')
+            for result in resultados:
+                if result['status'] != 'success':
+                    erros = True
+                if result['xml_type'] == 'Recibo NF-e':
+                    status_sefaz = result['status_code'] + ' - ' + result['message']
+                    chave_nfe = result["nfe_key"] or ''
+                                        
+                result_pool.create(cr, uid, {'send_sefaz_id': nfe_send_id , 'xml_type': result['xml_type'], 
+                            'name':result['name'], 'file':base64.b64encode(result['xml_sent'].encode('utf8')), 
+                            'name_result':result['name_result'], 'file_result':base64.b64encode(result['xml_result'].encode('utf8')),
+                            'status':result['status'], 'status_code':result['status_code'], 
+                            'message':result['message']}, context)
+        except Exception as e:
+            status_sefaz = e.message
+            erros = True
         
-        #raise Exception("Estou lançando exceção para não mudar de estado a Fatura")
+        data_envio = datetime.datetime.now()  
+        if erros:            
+            chave_nfe = ''   
+            self.write(cr, uid, ids, {'state':'sefaz_exception'}, context)                                 
+        else:            
+            self.write(cr, uid, ids, {'state':'open'}, context)          
+        
+        self.write(cr, uid, ids, { 'nfe_access_key': chave_nfe, 'nfe_status':status_sefaz, 'nfe_date':data_envio }, context)        
         
     def action_cancel(self, cr, uid, ids, context=None):
         self.cancel_invoice_online(cr, uid, ids, context)

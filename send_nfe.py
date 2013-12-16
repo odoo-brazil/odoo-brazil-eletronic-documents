@@ -79,6 +79,7 @@ class SendNFe(object):
                     for prot in processo.resposta.protNFe:
                         resultado["status_code"] = prot.infProt.cStat.valor
                         resultado["message"] = prot.infProt.xMotivo.valor
+                        resultado["nfe_key"] = prot.infProt.chNFe.valor
                         if prot.infProt.cStat.valor in ('100', '150', '110', '301', '302'):
                             nfe_xml = processo.resposta.dic_procNFe[prot.infProt.chNFe.valor].xml
                             danfe_pdf = processo.resposta.dic_procNFe[prot.infProt.chNFe.valor].danfe_pdf
