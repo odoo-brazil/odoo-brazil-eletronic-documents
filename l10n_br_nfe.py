@@ -17,10 +17,12 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.        #
 ###############################################################################
 
+import os
 from openerp.osv import osv, fields, orm
 import pysped.nfe, base64, re, datetime, netsvc
 from openerp.tools.translate import _
 from send_nfe import SendNFe
+from os.path import expanduser
 
 class l10n_br_nfe_send_sefaz(osv.Model):
     """ Classe para salvar o retorno dos metodos de envio de cancelamento, inutilização e recepção de nota """
@@ -120,9 +122,9 @@ class account_invoice(osv.Model):
         
         self.write(cr, uid, ids, { 'nfe_access_key': chave_nfe, 'nfe_status':status_sefaz, 'nfe_date':data_envio }, context)        
         
-    def action_cancel(self, cr, uid, ids, context=None):
+    def action_cancel(self, cr, uid, ids, context=None):        
         self.cancel_invoice_online(cr, uid, ids, context)
-        return  super(account_invoice,self).action_cancel(cr, uid, ids, context)
+        return super(account_invoice,self).action_cancel(cr, uid, ids, context)
         
     def cancel_invoice_online(self, cr, uid, ids,context=None):        
         record = self.browse(cr, uid, ids[0])
@@ -139,21 +141,17 @@ class account_invoice(osv.Model):
             validate_invoice_cancel(record)            
                 
             p = pysped.nfe.ProcessadorNFe()
-            p.versao = company.nfe_version
-            p.estado = company.partner_id.l10n_br_city_id.state_id.code
             
-            file_content_decoded = base64.decodestring(company.nfe_a1_file)
-            filename = company.nfe_export_folder + 'certificate.pfx'
-            fichier = open(filename,'w+')
-            fichier.write(file_content_decoded)
-            fichier.close()
-                       
-            p.certificado.arquivo = filename
-            p.certificado.senha = company.nfe_a1_password
+            p.versao = '2.00' if (company.nfe_version == '200') else '1.10'
+            p.estado = company.partner_id.l10n_br_city_id.state_id.code
         
-            p.salva_arquivos = company.save_xml_folder
-            p.contingencia_SCAN = False
-            p.caminho = company.nfe_export_folder
+            file_content_decoded = base64.decodestring(company.nfe_a1_file)        
+            p.certificado.stream_certificado = file_content_decoded
+            p.certificado.senha = company.nfe_a1_password
+    
+            p.salva_arquivos      = True
+            p.contingencia_SCAN   = False
+            p.caminho = company.nfe_export_folder or os.path.join(expanduser("~"), company.name)
             
             processo = p.cancelar_nota_evento(
                 chave_nfe = record.nfe_access_key,
@@ -161,15 +159,35 @@ class account_invoice(osv.Model):
                 justificativa='Somente um teste de cancelamento' #TODO Colocar a justificativa de cancelamento num wizard de cancelamento.
             )
 
-            #TODO Salvar esses dados ainda em algum lugar.
-            print processo        
-            print processo.envio.xml
-            print processo.envio.original
-            print processo.resposta.xml
-            print processo.resposta.original
-            print processo.resposta.reason
-            print processo.resposta.dic_retEvento
-            print processo.resposta.dic_procEvento
+            nfe_send_pool = self.pool.get('l10n_br_nfe.send_sefaz')
+            nfe_send_id = 0
+            if not record.send_nfe_invoice_id:
+                nfe_send_id = nfe_send_pool.create(cr, uid, { 'name': 'Envio NFe', 'start_date': datetime.datetime.now()}, context)
+                self.write(cr, uid, ids, {'send_nfe_invoice_id': nfe_send_id})
+            else:
+                nfe_send_id = record.send_nfe_invoice_id.id
+                
+                
+            sucesso = 'Error'
+            if processo.resposta.infCanc.cStat.valor == '101':
+                sucesso = 'success'
+            result_pool =  self.pool.get('l10n_br_nfe.send_sefaz_result')
+            result_pool.create(cr, uid, {'send_sefaz_id': nfe_send_id , 'xml_type': 'Cancelamento', 
+                            'name':'Envio_Cancelamento.xml', 'file':base64.b64encode(processo.envio.xml.encode('utf8')), 
+                            'name_result':'Retorno_Cancelamento.xml', 'file_result':base64.b64encode(processo.resposta.xml.encode('utf8')),
+                            'status':sucesso, 'status_code':processo.resposta.infCanc.cStat.valor, 
+                            'message':processo.resposta.infCanc.xMotivo.valor}, context)
+            
+        elif record.state in ('sefaz_export','sefaz_exception'):
+            result_pool =  self.pool.get('l10n_br_account.invoice.invalid.number')
+            
+            invalidate_number_id = result_pool.create(cr, uid, {'company_id':record.company_id.id,
+                'fiscal_document_id':record.fiscal_document_id.id,'document_serie_id':record.document_serie_id.id,
+                'number_start':record.internal_number,'number_end':record.internal_number, 
+                'justificative':'Inutilização originada do cancelamento da fatura: ' + record.internal_number}, context)
+            
+            invoice_invalidate = result_pool.browse(cr, uid, invalidate_number_id, context)
+            invoice_invalidate.action_draft_done(cr, uid, [invalidate_number_id], context)                        
         
 class l10n_br_account_invoice_invalid_number(osv.Model):
     _inherit = 'l10n_br_account.invoice.invalid.number'    
@@ -206,22 +224,17 @@ class l10n_br_account_invoice_invalid_number(osv.Model):
         validate_nfe_configuration(company)
         validate_nfe_invalidate_number(company, record)
         
-        p = pysped.nfe.ProcessadorNFe()
+        p = pysped.nfe.ProcessadorNFe()        
         p.versao = '2.00' if (company.nfe_version == '200') else '1.10'
         p.estado = company.partner_id.l10n_br_city_id.state_id.code
-        
-        file_content_decoded = base64.decodestring(company.nfe_a1_file)
-        filename = company.nfe_export_folder + 'certificate.pfx'
-        fichier = open(filename,'w+')
-        fichier.write(file_content_decoded)
-        fichier.close()
-                   
-        p.certificado.arquivo = filename
-        p.certificado.senha = company.nfe_a1_password
     
-        p.salva_arquivos = company.save_xml_folder
-        p.contingencia_SCAN = False    
-        p.caminho = company.nfe_export_folder       
+        file_content_decoded = base64.decodestring(company.nfe_a1_file)        
+        p.certificado.stream_certificado = file_content_decoded
+        p.certificado.senha = company.nfe_a1_password
+
+        p.salva_arquivos      = True
+        p.contingencia_SCAN   = False
+        p.caminho = company.nfe_export_folder or os.path.join(expanduser("~"), company.name)            
                 
         cnpj_partner = re.sub('[^0-9]','', company.partner_id.cnpj_cpf)
         serie = record.document_serie_id.code
