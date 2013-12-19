@@ -105,8 +105,8 @@ class account_invoice(osv.Model):
                     chave_nfe = result["nfe_key"] or ''
                                         
                 result_pool.create(cr, uid, {'send_sefaz_id': nfe_send_id , 'xml_type': result['xml_type'], 
-                            'name':result['name'], 'file':base64.b64encode(result['xml_sent'].encode('utf8')), 
-                            'name_result':result['name_result'], 'file_result':base64.b64encode(result['xml_result'].encode('utf8')),
+                            'name':result['name'], 'file':base64.b64encode(result['xml_sent']), 
+                            'name_result':result['name_result'], 'file_result':base64.b64encode(result['xml_result']),
                             'status':result['status'], 'status_code':result['status_code'], 
                             'message':result['message']}, context)
         except Exception as e:

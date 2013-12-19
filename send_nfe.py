@@ -72,7 +72,7 @@ class SendNFe(object):
             if processo.resposta.status == 200:
                 
                 resultado = {'name':name,'name_result':name_result, 'message':message, 'xml_type':type_xml, 
-                    'status_code':status,'xml_sent': file_sent,'xml_result': file_result, 'status':'success'}
+                    'status_code':status,'xml_sent': file_sent.encode('utf8'),'xml_result': file_result.encode('utf8'), 'status':'success'}
                             
                 if processo.webservice == webservices_flags.WS_NFE_CONSULTA_RECIBO:                
                     resultado["status"] = "error"
@@ -87,14 +87,14 @@ class SendNFe(object):
                             danfe_nfe = {'name':'danfe.pdf','name_result':'nfe_protocolada.xml', 
                                 'message':prot.infProt.xMotivo.valor, 'xml_type':'Danfe/NF-e', 
                                 'status_code':prot.infProt.cStat.valor,'xml_sent': danfe_pdf,
-                                'xml_result': nfe_xml , 'status':'success'}
+                                'xml_result': nfe_xml.encode('utf8') , 'status':'success'}
                             
                             resultado["status"] = "success"
                             result.append(danfe_nfe)
                             
             else:
                 resultado = {'name':name,'name_result':name_result, 'message':processo.resposta.original, 'xml_type':type_xml, 
-                    'status_code':processo.resposta.status,'xml_sent': file_sent,'xml_result': file_result, 'status':'error'}
+                    'status_code':processo.resposta.status,'xml_sent': file_sent.encode('utf8'),'xml_result': file_result.encode('utf8'), 'status':'error'}
                 
             result.append(resultado)
             
