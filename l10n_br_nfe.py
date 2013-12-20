@@ -18,8 +18,12 @@
 ###############################################################################
 
 import os
+import re
+import pysped.nfe
+import base64
+import datetime
+import netsvc
 from openerp.osv import osv, fields, orm
-import pysped.nfe, base64, re, datetime, netsvc
 from openerp.tools.translate import _
 from send_nfe import SendNFe
 from os.path import expanduser
@@ -71,12 +75,21 @@ class res_company(osv.Model):
     }
 
 class account_invoice(osv.Model):
+    #--- account_invoice overwritten methods
     _inherit = 'account.invoice'
     _columns = {                               
         'send_nfe_invoice_id': fields.many2one('l10n_br_nfe.send_sefaz', 'Envio NFe'),
         'cancel_nfe_invoice_id': fields.many2one('l10n_br_nfe.send_sefaz', 'Cancelamento NFe'),
     }
-    
+    #--- Override methods of super class
+    def copy(self, cr, uid, ids, defaults, context=None):
+        defaults['send_nfe_invoice_id'] = None
+        return super(account_invoice,self).copy(cr, uid, ids, defaults, context)
+    def action_cancel(self, cr, uid, ids, context=None):        
+        self.cancel_invoice_online(cr, uid, ids, context)
+        return super(account_invoice,self).action_cancel(cr, uid, ids, context)
+ 
+    #---Workflow actions  
     def action_invoice_send_nfe(self, cr, uid, ids, context=None):
         record = self.browse(cr, uid, ids[0])
         company_pool = self.pool.get('res.company')        
@@ -122,10 +135,7 @@ class account_invoice(osv.Model):
         
         self.write(cr, uid, ids, { 'nfe_access_key': chave_nfe, 'nfe_status':status_sefaz, 'nfe_date':data_envio }, context)        
         
-    def action_cancel(self, cr, uid, ids, context=None):        
-        self.cancel_invoice_online(cr, uid, ids, context)
-        return super(account_invoice,self).action_cancel(cr, uid, ids, context)
-        
+    #--- Class methods
     def cancel_invoice_online(self, cr, uid, ids,context=None):        
         record = self.browse(cr, uid, ids[0])
         if record.document_serie_id:
@@ -188,7 +198,7 @@ class account_invoice(osv.Model):
             
             invoice_invalidate = result_pool.browse(cr, uid, invalidate_number_id, context)
             invoice_invalidate.action_draft_done(cr, uid, [invalidate_number_id], context)                        
-        
+     
 class l10n_br_account_invoice_invalid_number(osv.Model):
     _inherit = 'l10n_br_account.invoice.invalid.number'    
     _columns = {
@@ -214,8 +224,7 @@ class l10n_br_account_invoice_invalid_number(osv.Model):
         except Exception,e:
             raise orm.except_orm(_('Error !'), e.message)       
         return True
-    
-        
+            
     def send_request_to_sefaz(self, cr, uid, ids, *args):    
         record = self.browse(cr, uid, ids[0])
         company_pool = self.pool.get('res.company')        
@@ -247,6 +256,8 @@ class l10n_br_account_invoice_invalid_number(osv.Model):
             justificativa=record.justificative)
                    
         return processo
+
+#--- Validation methods used before send any data to SEFAZ
 
 def validate_nfe_invalidate_number(company, record):
     error = u'As seguintes configurações estão faltando:\n'    
