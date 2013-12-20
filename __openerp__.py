@@ -39,7 +39,12 @@
         'l10n_br_account',        
     ],
     "init_xml": [],
-    'update_xml': ['l10n_br_nfe.xml'],
+    'update_xml': [],
+    'data':[
+            'account_invoice_workflow.xml',
+            'account_invoice_view.xml',
+            'l10n_br_nfe_view.xml',
+            ],
     'demo_xml': [],
     'installable': True,
     'active': False,
