@@ -7,8 +7,10 @@
 			<field name="priority">32</field>
 			<field name="inherit_id" ref="account.invoice_form" />
 			<field name="arch" type="xml">
-				<button name="invoice_open" position="replace">	
-					<button name="invoice_trysend" confirm="Confirma emissão da NF-e ?" states="sefaz_export" string="Enviar SEFAZ Direto" class="oe_highlight"  groups="base.group_user"/>
+				<button name="invoice_open" position="replace">
+					<button name="invoice_open" attrs="{'invisible':['|',('nfe_export_date','=',False),('state','!=','sefaz_export')]}" string="Validate" class="oe_highlight"/>
+					<button name="invoice_trysend" attrs="{'invisible':['|',('state','!=','sefaz_export'),('nfe_export_date','!=',False)]}" confirm="Confirma emissão da NF-e ?" string="Transmitir" class="oe_highlight"  groups="base.group_user"/>
+					<button name="invoice_print" string="Pré-Visualizar DANFE" states="sefaz_export" groups="base.group_user"/>
 					<button name="invoice_resend" states="sefaz_exception" string="Habilitar re-envio" class="oe_highlight"  groups="base.group_user"/>
 				</button>
 				<xpath expr="//button[@name='invoice_cancel']" position="replace">

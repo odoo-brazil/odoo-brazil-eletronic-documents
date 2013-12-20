@@ -4,9 +4,7 @@
         <record id="act_sefaz_transmit" model="workflow.activity">
             <field name="wkf_id" ref="account.wkf"/>
             <field name="name">sefaz_transmit</field>
-            <field name="action">
-            	action_invoice_send_nfe()            	
-            </field>
+            <field name="action">action_invoice_send_nfe()</field>
             <field name="kind">function</field>
         </record>
 	        <record id="tras_sefaz_export_transmit" model="workflow.transition">
