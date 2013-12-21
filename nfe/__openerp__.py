@@ -18,7 +18,7 @@
 ###############################################################################
 
 {
-    'name': 'Akretion NFE',
+    'name': 'NFE',
     'version': '0.1',
     'category': 'Generic Modules',
     'description': """Implementa a exportação de notas fiscais através de

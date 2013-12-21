@@ -18,13 +18,13 @@
 ###############################################################################
 
 {
-    'name': 'Akretion NFE DANFE',
+    'name': 'NFE DANFE',
     'version': '0.1',
     'category': 'Generic Modules',
     'description': """Substitui o relatório original de Fatura pelo DANFE""",
     'author': 'Akretion',
     'license': 'AGPL-3',
-    'website': 'http://www.akretion.com',
+    'website': 'http://www.openerpbrasil.org',
     'depends': [
         'l10n_br_account',
         'l10n_br_delivery',

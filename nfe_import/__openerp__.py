@@ -18,16 +18,16 @@
 ###############################################################################
 
 {
-    'name': 'Akretion NFE Import',
+    'name': 'NFE Import',
     'version': '0.1',
     'category': 'Generic Modules',
     'description': """Implementa a importação de notas fiscais através de
 arquivos XML""",
     'author': 'Akretion',
     'license': 'AGPL-3',
-    'website': 'http://www.akretion.com',
+    'website': 'http://www.openerpbrasil.org',
     'depends': [
-        'akretion_nfe',
+        'nfe',
     ],
     'data': [
         'wizard/akretion_nfe_import_view.xml',
