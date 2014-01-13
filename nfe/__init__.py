@@ -18,4 +18,5 @@
 ###############################################################################
 
 import sped
-#import wizard
+import account_invoice
+import l10n_br_account
