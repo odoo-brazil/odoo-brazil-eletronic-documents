@@ -31,7 +31,7 @@
         'report_aeroo_ooo',
     ],
     'data': [
-        'akretion_nfe_danfe_report.xml',
+        'nfe_danfe_report.xml',
     ],
     'demo': [],
     'test': [],

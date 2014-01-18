@@ -26,7 +26,7 @@ import netsvc
 from openerp.osv import osv, fields, orm
 from openerp.tools.translate import _
 from os.path import expanduser
-from sped.nfe.config_check import *
+from sped.nfe.validator.config_check import *
 
 # class l10n_br_nfe_send_sefaz(osv.Model):
 #     """ Classe para salvar o retorno dos metodos de envio de cancelamento, inutilização e recepção de nota """
@@ -101,6 +101,24 @@ class l10n_br_account_invoice_invalid_number(osv.Model):
             raise orm.except_orm(_('Error !'), e.message)       
         return True
 
+class L10n_brAccountInvoiceCancel(orm.Model):
+
+    _inherit = 'l10n_br_account.invoice.cancel'
+
+    def action_draft_done(self, cr, uid, ids, *args):
+        self.write(cr, uid, ids, {'state': 'done'})
+        return True
+
+class L10n_brDocumentEvent(orm.Model):
+
+    _inherit = 'l10n_br_account.document_event'
+
+    def set_done(self, cr, uid, ids, context=None):
+        if context is None:
+            context = {}
+        self.write(cr, uid, ids, {'state':'done', 'end_date': datetime.datetime.now()}, context=context)
+        return True
+        
 #--- Validation methods used before send any data to SEFAZ
 
 
