@@ -34,11 +34,7 @@ from openerp.tools.translate import _
 from pysped.nfe import ProcessadorNFe
 from pysped.nfe import webservices_flags
 
-def monta_caminho_nfe(ambiente, chave_nfe):
-    p = ProcessadorNFe()
-    return p.monta_caminho_nfe(ambiente,chave_nfe)
-
-def check(company, chave_nfe, nfe=False):
+def processo(company):
     
     p = ProcessadorNFe()
     p.ambiente = ambiente = int(company.nfe_environment)
@@ -49,8 +45,30 @@ def check(company, chave_nfe, nfe=False):
     p.salva_arquivos      = True
     p.contingencia_SCAN   = False
     p.caminho = company.nfe_export_folder or os.path.join(expanduser("~"), company.name)
+    
+    return p
 
-    return  p.consultar_nota(ambiente,chave_nfe,nfe)
+
+def monta_caminho_nfe(ambiente, chave_nfe):
+    
+    p = ProcessadorNFe()
+    return p.monta_caminho_nfe(ambiente,chave_nfe)
+
+def check_key_nfe(company, chave_nfe, nfe=False):
+    
+    p = processo(company)
+    return  p.consultar_nota(p.ambiente,chave_nfe,nfe)
+
+
+def check_partner(company,cnpj_cpf, estado=None, ie=None):
+    
+    if not estado:
+        estado = company.partner_id.state_id.code
+    cnpj_cpf = (re.sub('[%s]' % re.escape(string.punctuation), '', cnpj_cpf or ''))
+        
+    p = processo(company)
+    
+    return  p.consultar_cadastro(estado, ie, cnpj_cpf)
 
 def sign():
     pass
@@ -60,17 +78,9 @@ def cancel():
     
 def send(company, nfe):
                         
-    p = ProcessadorNFe()
-    p.ambiente = int(company.nfe_environment)
-    p.versao = '2.00' if (company.nfe_version == '200') else '1.10'
-    p.estado = company.partner_id.l10n_br_city_id.state_id.code
-    p.certificado.stream_certificado = base64.decodestring(company.nfe_a1_file)
-    p.certificado.senha = company.nfe_a1_password
-    p.salva_arquivos      = True
-    p.contingencia_SCAN   = False
-    p.caminho = company.nfe_export_folder or os.path.join(expanduser("~"), company.name)
-
+    p = processo(company)
     return p.processar_notas(nfe)
+
         #result.append({'status':'success', 'message':'Recebido com sucesso.', 'key': nfe[0].infNFe.Id.valor, 'nfe': processo.envio.xml})
         #result.append({'status':'success', 'message':'Recebido com sucesso.','key': nfe[0].infNFe.Id.valor, 'nfe': processo.resposta.xml})
 
@@ -147,17 +157,9 @@ def send(company, nfe):
 #inutilização de numeração
 
 def invalidate(company, invalidate_number):
+                        
+    p = processo(company)
     
-    p = ProcessadorNFe()        
-    p.ambiente = int(company.nfe_environment)
-    p.versao = '2.00' if (company.nfe_version == '200') else '1.10'
-    p.estado = company.partner_id.l10n_br_city_id.state_id.code
-    p.certificado.stream_certificado = base64.decodestring(company.nfe_a1_file)
-    p.certificado.senha = company.nfe_a1_password
-    p.salva_arquivos      = True
-    p.contingencia_SCAN   = False
-    p.caminho = company.nfe_export_folder or os.path.join(expanduser("~"), company.name)       
-            
     cnpj_partner = re.sub('[^0-9]','', company.partner_id.cnpj_cpf)
     serie = invalidate_number.document_serie_id.code
 
