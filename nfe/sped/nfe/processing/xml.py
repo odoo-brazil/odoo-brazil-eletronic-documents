@@ -3,6 +3,7 @@
 #                                                                             #
 # Copyright (C) 2013  Danimar Ribeiro 22/08/2013                              #
 # Copyright (C) 2013  Renato Lima - Akretion                                  #
+# Copyright (C) 2014  Luis Felipe Mileo - KMEE - www.kmee.com.br              #
 #                                                                             #
 #This program is free software: you can redistribute it and/or modify         #
 #it under the terms of the GNU Affero General Public License as published by  #
@@ -34,11 +35,8 @@ from openerp.tools.translate import _
 from pysped.nfe import ProcessadorNFe
 from pysped.nfe import webservices_flags
 
-def monta_caminho_nfe(ambiente, chave_nfe):
-    p = ProcessadorNFe()
-    return p.monta_caminho_nfe(ambiente,chave_nfe)
-
-def __configure(company):
+def __processo(company):
+    
     p = ProcessadorNFe()
     p.ambiente = int(company.nfe_environment)
     p.versao = '2.00' if (company.nfe_version == '200') else '1.10'
@@ -48,38 +46,52 @@ def __configure(company):
     p.salva_arquivos      = True
     p.contingencia_SCAN   = False
     p.caminho = company.nfe_export_folder or os.path.join(expanduser("~"), company.name)
+    
     return p
+
+def monta_caminho_nfe(ambiente, chave_nfe):
+    #TODO: corrigir chamada do metodo para multi empresa
+    p = ProcessadorNFe()
+    return p.monta_caminho_nfe(ambiente,chave_nfe)
+
+def check_key_nfe(company, chave_nfe, nfe=False):
+    
+    p = __processo(company)
+    return  p.consultar_nota(p.ambiente,chave_nfe,nfe)
+
+def check_partner(company,cnpj_cpf, estado=None, ie=None):
+    
+    p = __processo(company)    
+    if not estado:
+        estado = company.partner_id.state_id.code
+    cnpj_cpf = (re.sub('[%s]' % re.escape(string.punctuation), '', cnpj_cpf or ''))
+    return  p.consultar_cadastro(estado, ie, cnpj_cpf)
 
 def sign():
     pass
+    
+def send(company, nfe):
+                        
+    p = __processo(company)
+    return p.processar_notas(nfe)
 
 def cancel(company, invoice, justificative):
-    p = __configure(company)
     
-    processo = p.cancelar_nota_evento(
+    p = __processo(company)
+    return p.cancelar_nota_evento(
         chave_nfe = invoice.nfe_access_key,
         numero_protocolo=invoice.nfe_status,
         justificativa=justificative
     )
-    return processo
-    
-def send(company, nfe):
-    p = __configure(company)
-
-    return p.processar_notas(nfe)
        
 def invalidate(company, invalidate_number):
-    p = __configure(company)     
-            
+                        
+    p = __processo(company)
     cnpj_partner = re.sub('[^0-9]','', company.partner_id.cnpj_cpf)
     serie = invalidate_number.document_serie_id.code
-
-    processo = p.inutilizar_nota(
+    return p.inutilizar_nota(
         cnpj=cnpj_partner,
         serie=serie,
         numero_inicial=invalidate_number.number_start,
         numero_final=invalidate_number.number_end,
         justificativa=invalidate_number.justificative)
-               
-    return processo
-
