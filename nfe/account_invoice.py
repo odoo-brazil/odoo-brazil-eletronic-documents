@@ -23,9 +23,9 @@ from openerp.osv import orm
 from openerp.tools.translate import _
 from .sped.nfe.document import NFe200
 from .sped.nfe.validator.xml import validation
-from .sped.nfe.validator.config_check import validate_nfe_configuration
+from .sped.nfe.validator.config_check import validate_nfe_configuration, validate_invoice_cancel
 from .sped.nfe.processing.xml import monta_caminho_nfe
-from .sped.nfe.processing.xml import send
+from .sped.nfe.processing.xml import send, cancel
 
 
 class AccountInvoice(orm.Model):
@@ -159,3 +159,71 @@ class AccountInvoice(orm.Model):
                      'state': protNFe["state"]
                      }, context)
         return True
+    
+    def action_cancel(self, cr, uid, ids, context=None):        
+        self.cancel_invoice_online(cr, uid, ids, context)        
+        return super(AccountInvoice,self).action_cancel(cr, uid, ids, context)
+        
+    def cancel_invoice_online(self, cr, uid, ids,context=None):
+        for inv in self.browse(cr, uid, ids, context):           
+            if inv.document_serie_id:
+                if inv.document_serie_id.fiscal_document_id:
+                    if not inv.document_serie_id.fiscal_document_id.electronic:
+                        return
+                
+            event_obj = self.pool.get('l10n_br_account.document_event')
+            if inv.state in ('open','paid'):
+                company_pool = self.pool.get('res.company')
+                company = company_pool.browse(cr, uid, inv.company_id.id)
+                
+                validate_nfe_configuration(company)
+                validate_invoice_cancel(inv)
+                
+                #TODO Buscar a justificativa do objeto invoice_cancel
+                
+                results = []   
+                try:                
+                    processo = cancel(company, inv, "Foi cancelado a fatura pois o cliente desistiu.") 
+                    vals = {
+                                'type': str(processo.webservice),
+                                'status': processo.resposta.cStat.valor,
+                                'response': '',
+                                'company_id': company.id,
+                                'origin': '[NF-E] {0}'.format(inv.internal_number),
+                                'file_sent': processo.arquivos[0]['arquivo'] if len(processo.arquivos) > 0 else '',
+                                'file_returned': processo.arquivos[1]['arquivo'] if len(processo.arquivos) > 0 else '',
+                                'message': processo.resposta.xMotivo.valor,
+                                'state': 'done',
+                                'document_event_ids': inv.id}
+                     
+                    for prot in processo.resposta.retEvento:                        
+                        vals["status"] = prot.infEvento.cStat.valor
+                        vals["message"] = prot.infEvento.xMotivo.valor
+                        if prot.infEvento.cStat.valor == '101':
+                            print 'Sucesso'
+                        
+                    results.append(vals)
+                except Exception as e:
+                    vals = {
+                            'type': '-1',
+                            'status': '000',
+                            'response': 'response',
+                            'company_id': company.id,
+                            'origin': '[NF-E] {0}'.format(inv.internal_number),
+                            'file_sent': 'False',
+                            'file_returned': 'False',
+                            'message': 'Erro desconhecido ' + e.message,
+                            'state': 'done',
+                            'document_event_ids': inv.id
+                            }
+                    results.append(vals)
+                finally:
+                    for result in results:
+                        event_obj.create(cr, uid, result)    
+             
+            elif inv.state in ('sefaz_export','sefaz_exception'):
+                pass
+                #Ver o que fazer aqui.
+                
+                
+    
