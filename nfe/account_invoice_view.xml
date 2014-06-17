@@ -14,7 +14,7 @@
 					<button name="invoice_resend" states="sefaz_exception" string="Habilitar re-envio" class="oe_highlight"  groups="base.group_user"/>
 				</button>
 				<xpath expr="//button[@name='invoice_cancel']" position="replace">
-					<button name="invoice_cancel" confirm="Deseja realmente cancelar a nota? Em caso de NF-e será efetuado o cancelamento on-line" states="draft,proforma2,sale,open,sefaz_export,sefaz_exception" string="Cancel Invoice" groups="account.group_account_invoice"/>
+					<button name="%(action_nfe_invoice_cancel_form)d"  type="action" confirm="Deseja realmente cancelar a nota? Em caso de NF-e será efetuado o cancelamento on-line" states="draft,proforma2,sale,open,sefaz_export,sefaz_exception" string="Cancel Invoice" groups="account.group_account_invoice"/>
 				</xpath>
 			</field>
 		</record>

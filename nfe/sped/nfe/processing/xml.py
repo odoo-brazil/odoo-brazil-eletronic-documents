@@ -73,12 +73,12 @@ def send(company, nfe):
     p = __processo(company)
     return p.processar_notas(nfe)
 
-def cancel(company, invoice, justificative):
+def cancel(company, nfe_access_key, nfe_protocol_number, justificative):
     
     p = __processo(company)
     return p.cancelar_nota_evento(
-        chave_nfe = invoice.nfe_access_key,
-        numero_protocolo=invoice.nfe_status,
+        chave_nfe = nfe_access_key,
+        numero_protocolo=nfe_protocol_number,
         justificativa=justificative
     )
        
