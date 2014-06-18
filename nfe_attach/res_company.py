@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 ###############################################################################
 #                                                                             #
-# Copyright (C) 2014  KMEE  - www.kmee.com.br - Luis Felipe Mileo             #
+# Copyright (C) 2014  KMEE  - www.kmee.com.br - Rafael da Silva Lima          #
 #                                                                             #
 #This program is free software: you can redistribute it and/or modify         #
 #it under the terms of the GNU Affero General Public License as published by  #
@@ -16,23 +16,11 @@
 #You should have received a copy of the GNU General Public License            #
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.        #
 ###############################################################################
+from openerp.osv import osv,orm, fields
 
-{
-    'name': 'NFE XML',
-    'version': '0.1',
-    'category': 'Generic Modules',
-    'description': """Salva o danfe e xml em anexo""",
-    'author': 'KMEE',
-    'license': 'AGPL-3',
-    'website': 'http://www.kmee.com.br',
-    'depends': [
-        'document',
-        'nfe',
-    ],
-    'data': ['data/nfe_attach_email.xml',
-             'res_company_view.xml'],
-    'demo': [],
-    'test': [],
-    'installable': True,
-    'active': False,
-}
+class res_company(osv.Model):
+    _inherit = 'res.company'
+
+    _columns = {
+    'nfe_email': fields.text('Observação em Email NFe'),
+            }
