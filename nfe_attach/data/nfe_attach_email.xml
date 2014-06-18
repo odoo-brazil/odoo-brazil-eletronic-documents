@@ -1,4 +1,3 @@
-<?xml version="1.0" ?>
 <openerp>
 	<data noupdate="1">
 		<record id="email_template_nfe" model="email.template">
@@ -29,7 +28,9 @@
        &nbsp;&nbsp;Razão Social: <strong>${object.partner_id.legal_name}</strong><br />
        &nbsp;&nbsp;CNPJ: <strong>${object.partner_id.cnpj_cpf}</strong><br />
        &nbsp;&nbsp;Chave de acesso: <strong>${object.nfe_access_key}</strong><br />
-       &nbsp;&nbsp;Protocolo: <strong>${object.nfe_protocol_number or " "}</strong><br />
+       % if object.nfe_protocol_number:
+           &nbsp;&nbsp;Protocolo: <strong>${object.nfe_protocol_number or " "}</strong><br />
+       % endif
        &nbsp;&nbsp;Número: <strong>${object.internal_number}</strong><br />
        &nbsp;&nbsp;Série: <strong>${object.document_serie_id.code}</strong><br />
        &nbsp;&nbsp;Valor Total: <strong>${object.amount_total} ${object.currency_id.name}</strong><br />
@@ -51,8 +52,12 @@
     </div>
     <div style="width: 347px; margin: 0px; padding: 5px 14px; line-height: 16px; background-color: #EEE;">
         <span style="color: #222; margin-bottom: 5px; display: block; ">
+        % if object.company_id.legal_name:
+            ${object.company_id.legal_name}<br/>
+            ${object.company_id.cnpj_cpf}
+        % endif
         % if object.company_id.street:
-            ${object.company_id.street}<br/>
+            ${object.company_id.street} &nbsp; ${object.company_id.number or ' '}, ${object.company_id.district}<br/>
         % endif
         % if object.company_id.street2:
             ${object.company_id.street2}<br/>
@@ -61,7 +66,7 @@
             ${object.company_id.zip} ${object.company_id.city}<br/>
         % endif
         % if object.company_id.country_id:
-            ${object.company_id.state_id and ('%s, ' % object.company_id.state_id.name) or ''} ${object.company_id.country_id.name or ''}<br/>
+            ${object.company_id.state_id.code and ('%s, ' % object.company_id.state_id.name) or ''} ${object.company_id.country_id.name or ''}<br/>
         % endif
         </span>
         % if object.company_id.phone:
@@ -72,16 +77,14 @@
         % if object.company_id.website:
             <div>
                 Web :&nbsp;<a href="${object.company_id.website}">${object.company_id.website}</a>
-            </div>
+            </div>s
         %endif
         <hr>
         <br>
-        <br>
-        % if object.company_id.nfe_email:
-        	<p><i>${object.company_id.nfe_email}</i></p>
-        %endif
-        <p></p>
     </div>
+    % if object.company_id.nfe_email:
+        <p><i>${object.company_id.nfe_email}</i></p>
+    %endif
 </div> ]]>
 			</field>
 		</record>
