@@ -29,7 +29,7 @@
         'document',
         'nfe',
     ],
-    'data': [],
+    'data': ['data/nfe_attach_email.xml', 'data/nfe_attach_company.xml'],
     'demo': [],
     'test': [],
     'installable': True,
