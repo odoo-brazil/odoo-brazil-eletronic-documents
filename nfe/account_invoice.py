@@ -23,9 +23,9 @@ from openerp.osv import orm
 from openerp.tools.translate import _
 from .sped.nfe.document import NFe200
 from .sped.nfe.validator.xml import validation
-from .sped.nfe.validator.config_check import validate_nfe_configuration
+from .sped.nfe.validator.config_check import validate_nfe_configuration, validate_invoice_cancel
 from .sped.nfe.processing.xml import monta_caminho_nfe
-from .sped.nfe.processing.xml import send
+from .sped.nfe.processing.xml import send, cancel
 
 
 class AccountInvoice(orm.Model):
@@ -69,7 +69,6 @@ class AccountInvoice(orm.Model):
                     f.write(nfe_file)
                     f.close()
 
-                    
                     event_obj = self.pool.get('l10n_br_account.document_event')
                     nfe_send_id = event_obj.create(cr, uid, {
                         'type': '0',
@@ -103,7 +102,7 @@ class AccountInvoice(orm.Model):
             protNFe["state"] = 'sefaz_exception'
             protNFe["status_code"] = ''
             protNFe["message"] = ''
-
+            protNFe["nfe_protocol_number"] = ''
             try:
                 nfe.append(nfe_obj.set_xml(arquivo))
 
@@ -125,6 +124,7 @@ class AccountInvoice(orm.Model):
                     if processo.webservice == 1:
                         for prot in processo.resposta.protNFe:
                             protNFe["status_code"] = prot.infProt.cStat.valor
+                            protNFe["nfe_protocol_number"] = prot.infProt.nProt.valor
                             protNFe["message"] = prot.infProt.xMotivo.valor
                             vals["status"] = prot.infProt.cStat.valor
                             vals["message"] = prot.infProt.xMotivo.valor
@@ -156,6 +156,75 @@ class AccountInvoice(orm.Model):
                 self.write(cr, uid, inv.id, {
                      'nfe_status': protNFe["status_code"] + ' - ' + protNFe["message"],
                      'nfe_date': datetime.datetime.now(),
-                     'state': protNFe["state"]
+                     'state': protNFe["state"],
+                     'nfe_protocol_number': protNFe["nfe_protocol_number"],
                      }, context)
+        return True 
+        
+    def cancel_invoice_online(self, cr, uid, ids, justificative, context=None):
+        
+        for inv in self.browse(cr, uid, ids, context):           
+            if inv.document_serie_id and inv.document_serie_id.fiscal_document_id \
+               and not inv.document_serie_id.fiscal_document_id.electronic:
+                        return False
+                      
+            event_obj = self.pool.get('l10n_br_account.document_event')
+            if inv.state in ('open','paid'):
+                company_pool = self.pool.get('res.company')
+                company = company_pool.browse(cr, uid, inv.company_id.id)
+                
+                validate_nfe_configuration(company)
+                validate_invoice_cancel(inv)
+            
+                results = []   
+                try:
+                    os.environ['TZ'] = 'America/Sao_Paulo' #FIXME: context.get('tz') ou Colocar o campo tz no cadastro da empresa.                
+                    processo = cancel(company, inv.nfe_access_key, inv.nfe_protocol_number, justificative) 
+                    vals = {
+                                'type': str(processo.webservice),
+                                'status': processo.resposta.cStat.valor,
+                                'response': '',
+                                'cresult = {}ompany_id': company.id,
+                                'origin': '[NF-E] {0}'.format(inv.internal_number),
+                                'file_sent': processo.arquivos[0]['arquivo'] if len(processo.arquivos) > 0 else '',
+                                'file_returned': processo.arquivos[1]['arquivo'] if len(processo.arquivos) > 0 else '',
+                                'message': processo.resposta.xMotivo.valor,
+                                'state': 'done',
+                                'document_event_ids': inv.id}
+                     
+                    for prot in processo.resposta.retEvento:                        
+                        vals["status"] = prot.infEvento.cStat.valor
+                        vals["message"] = prot.infEvento.xMotivo.valor
+                        if prot.infEvento.cStat.valor == '135':
+                            result = super(AccountInvoice,self).action_cancel(cr, uid, [inv.id], context)
+                            if result:
+                                self.write(cr, uid, [inv.id], {'state':'sefaz_cancelled'})
+                                obj_cancel = self.pool.get('l10n_br_account.invoice.cancel')
+                                obj_cancel.create(cr,uid, 
+                                   {'invoice_id': inv.id,
+                                    'justificative': justificative,
+                                    })                                                   
+                    results.append(vals)
+                except Exception as e:
+                    os.environ['TZ'] = 'UTC'
+                    vals = {
+                            'type': '-1',
+                            'status': '000',
+                            'response': 'response',
+                            'company_id': company.id,
+                            'origin': '[NF-E] {0}'.format(inv.internal_number),
+                            'file_sent': 'OpenFalse',
+                            'file_returned': 'False',
+                            'message': 'Erro desconhecido ' + e.message,
+                            'state': 'done',
+                            'document_event_ids': inv.id
+                            }
+                    results.append(vals)
+                finally:
+                    for result in results:
+                        event_obj.create(cr, uid, result)    
+             
+            elif inv.state in ('sefaz_export','sefaz_exception'):
+                pass
         return True
+
