@@ -3,6 +3,7 @@
 #                                                                             #
 # Copyright (C) 2013  Danimar Ribeiro 22/08/2013                              #
 # Copyright (C) 2013  Renato Lima - Akretion                                  #
+# Copyright (C) 2014  Luis Felipe Mileo - KMEE - www.kmee.com.br              #
 #                                                                             #
 #This program is free software: you can redistribute it and/or modify         #
 #it under the terms of the GNU Affero General Public License as published by  #
@@ -34,10 +35,10 @@ from openerp.tools.translate import _
 from pysped.nfe import ProcessadorNFe
 from pysped.nfe import webservices_flags
 
-def processo(company):
+def __processo(company):
     
     p = ProcessadorNFe()
-    p.ambiente = ambiente = int(company.nfe_environment)
+    p.ambiente = int(company.nfe_environment)
     p.versao = '2.00' if (company.nfe_version == '200') else '1.10'
     p.estado = company.partner_id.l10n_br_city_id.state_id.code
     p.certificado.stream_certificado = base64.decodestring(company.nfe_a1_file)
@@ -47,120 +48,45 @@ def processo(company):
     p.caminho = company.nfe_export_folder
     return p
 
-
 def monta_caminho_nfe(company, chave_nfe):
-    p = processo(company)
+    p = __processo(company)
     return p.monta_caminho_nfe(p.ambiente,chave_nfe)
 
 def check_key_nfe(company, chave_nfe, nfe=False):
     
-    p = processo(company)
+    p = __processo(company)
     return  p.consultar_nota(p.ambiente,chave_nfe,nfe)
-
 
 def check_partner(company,cnpj_cpf, estado=None, ie=None):
     
+    p = __processo(company)    
     if not estado:
         estado = company.partner_id.state_id.code
     cnpj_cpf = (re.sub('[%s]' % re.escape(string.punctuation), '', cnpj_cpf or ''))
-        
-    p = processo(company)
-    
     return  p.consultar_cadastro(estado, ie, cnpj_cpf)
 
 def sign():
     pass
-
-def cancel():
-    pass
     
 def send(company, nfe):
                         
-    p = processo(company)
+    p = __processo(company)
     return p.processar_notas(nfe)
 
-        #result.append({'status':'success', 'message':'Recebido com sucesso.', 'key': nfe[0].infNFe.Id.valor, 'nfe': processo.envio.xml})
-        #result.append({'status':'success', 'message':'Recebido com sucesso.','key': nfe[0].infNFe.Id.valor, 'nfe': processo.resposta.xml})
-
-
-        # print dir(processo)
-        # print "\n Arquivos" , processo.arquivos[0]['arquivo']
-        # print "\n Arquivos" , processo.arquivos[1]['arquivo']
-
-        # print "\n Envio" ,  dir(processo.envio)
-        # print "\n Resposta" ,  dir(processo.resposta)
-        # print "\n WebService" ,  dir(processo.webservice)
-
-
-        # type_xml = ''
-
-        # status = 
-        # message = 
-        # file_sent =
-        # file_result =
-
-                       
-            
-        # if processo.resposta.status == 200:
-
-        #     resultado = {
-        #         'name':name,
-        #         'name_result':name_result,
-        #         'message':message,
-        #         'xml_type':type_xml,
-        #         'status_code':status,
-        #         'xml_sent': file_sent,
-        #         'xml_result': file_result,
-        #         'status':'success'
-        #         }
-
-        #     if processo.webservice == webservices_flags.WS_NFE_CONSULTA_RECIBO:                
-        #         resultado["status"] = "error"
-                
-        #         for prot in processo.resposta.protNFe:
-                    
-        #             resultado["status_code"] = prot.infProt.cStat.valor
-        #             resultado["message"] = prot.infProt.xMotivo.valor
-        #             resultado["nfe_key"] = prot.infProt.chNFe.valor
-
-        #             if prot.infProt.cStat.valor in ('100', '150', '110', '301', '302'):
-        #                 nfe_xml = processo.resposta.dic_procNFe[prot.infProt.chNFe.valor].xml
-        #                 #danfe_pdf = processo.resposta.dic_procNFe[prot.infProt.chNFe.valor].danfe_pdf
-        #                 danfe_nfe = {
-        #                     'name':'danfe.pdf',
-        #                     'name_result':'nfe_protocolada.xml', 
-        #                     'message':prot.infProt.xMotivo.valor, 
-        #                     'xml_type':'Danfe/NF-e', 
-        #                     'status_code':prot.infProt.cStat.valor,
-        #                     'xml_sent': 'danfe_pdf',
-        #                     'xml_result': nfe_xml.encode('utf8') , 
-        #                     'status':'success'}
-
-        #                 resultado["status"] = "success"
-        #                 result.append(danfe_nfe)
-        # else:
-        #     resultado = {
-        #         'name':name,
-        #         'name_result':name_result, 
-        #         'message':processo.resposta.original, 
-        #         'xml_type':type_xml, 
-        #         'status_code':processo.resposta.status,
-        #         'xml_sent': file_sent,
-        #         'xml_result': file_result, 
-        #         'status':'error'
-        #         }
-        # result.append(resultado)
-    # return result
-
-#inutilização de numeração
-
+def cancel(company, nfe_access_key, nfe_protocol_number, justificative):
+    
+    p = __processo(company)
+    return p.cancelar_nota_evento(
+        chave_nfe = nfe_access_key,
+        numero_protocolo=nfe_protocol_number,
+        justificativa=justificative
+    )
+       
 def invalidate(company, invalidate_number):
                         
-    p = processo(company)
-    
+    p = __processo(company)
     cnpj_partner = re.sub('[^0-9]','', company.partner_id.cnpj_cpf)
     serie = invalidate_number.document_serie_id.code
-
     return p.inutilizar_nota(
         cnpj=cnpj_partner,
         serie=serie,
@@ -170,5 +96,5 @@ def invalidate(company, invalidate_number):
 
 def send_correction_letter(company, chave_nfe, numero_sequencia ,correcao):
     
-    p = processo(company)
+    p = __processo(company)
     return p.corrigir_nota_evento( p.ambiente, chave_nfe, numero_sequencia, correcao)
