@@ -21,7 +21,7 @@
     'name': 'NFE XML',
     'version': '0.1',
     'category': 'Generic Modules',
-    'description': """Salva o danfe e xml em anexo""",
+    'description': """Salva o danfe e xml em anexo a fatura e permite o envio dos documentos anexados para o email do cliente""",
     'author': 'KMEE',
     'license': 'AGPL-3',
     'website': 'http://www.kmee.com.br',
