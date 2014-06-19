@@ -98,3 +98,4 @@ def send_correction_letter(company, chave_nfe, numero_sequencia ,correcao):
     
     p = __processo(company)
     return p.corrigir_nota_evento( p.ambiente, chave_nfe, numero_sequencia, correcao)
+
