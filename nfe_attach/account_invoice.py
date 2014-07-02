@@ -117,10 +117,11 @@ class email_template(osv.Model):
  
     def generate_email(self, cr, uid, template_id, res_id, context=None):
         context = context or {}
+        values =  super(email_template, self).generate_email( cr, uid, template_id, res_id, context)
         if context.get('default_model') == 'account.invoice':
-            values =  super(email_template, self).generate_email( cr, uid, template_id, res_id, context)
             values['attachment_ids'] = context.get('attachment_ids')
-            return values
+        return values
+        
         
 class res_company(osv.Model):
     _inherit = 'res.company'
