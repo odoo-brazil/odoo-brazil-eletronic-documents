@@ -35,6 +35,10 @@ from openerp.tools.translate import _
 from pysped.nfe import ProcessadorNFe
 from pysped.nfe import webservices_flags
 
+from pysped.nfe.danfe import DANFE
+from PIL import Image
+from StringIO import StringIO
+
 def __processo(company):
     
     p = ProcessadorNFe()
@@ -71,6 +75,13 @@ def sign():
 def send(company, nfe):
                         
     p = __processo(company)
+    logo = company.logo
+    logo_image = Image.open(StringIO(logo.decode('base64')))
+    logo_image.save(company.nfe_export_folder + "/company_logo.png")
+    p.danfe.logo = company.nfe_export_folder + '/company_logo.png'
+    p.danfe.nome_sistema = company.nfe_email
+    
+    
     return p.processar_notas(nfe)
 
 def cancel(company, nfe_access_key, nfe_protocol_number, justificative):
