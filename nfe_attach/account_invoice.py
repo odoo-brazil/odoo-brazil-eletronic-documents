@@ -23,125 +23,47 @@ from openerp.osv import osv,orm, fields
 from openerp.tools.translate import _
 from openerp.addons.nfe.sped.nfe.processing.xml import monta_caminho_nfe
 
+class AccountInvoiceInvalidNumber(orm.Model):
+    _inherit = 'l10n_br_account.invoice.invalid.number'
+
+    def attach_file_event(self, cr, uid, ids, seq, att_type, ext, context):
+
+        if seq == None:
+            seq = 1
+
+        for obj in self.browse(cr, uid, ids):
+            company_pool = self.pool.get('res.company')
+            company = company_pool.browse(cr, uid, obj.company_id.id)
+            # nfe_key = obj.nfe_access_key
+
+            if att_type == 'inu':
+                save_dir = context['caminho']
+                str_aux = save_dir[-55:]
+                nfe_key = save_dir[-55:-12]
+
+            obj_attachment = self.pool.get('ir.attachment')
+
+            try:
+                file_attc=open(save_dir,'r')
+                attc = file_attc.read()
+
+                attachment_id = obj_attachment.create(cr, uid, {
+                    'name': str_aux.format(nfe_key),
+                    'datas': base64.b64encode(attc),
+                    'datas_fname': '.' + ext,
+                    'description': '' or _('No Description'),
+                    'res_model': 'l10n_br_account.invoice.invalid.number',
+                    'res_id': obj.id
+                    }, context=context)
+            except IOError:
+                key = 'erro'
+            else:
+                file_attc.close()
+
+        return True
+
 class AccountInvoice(orm.Model):
     _inherit = 'account.invoice'
-
-    # def action_invoice_send_nfe(self, cr, uid, ids, context=None):
-    #     result = super(AccountInvoice, self).action_invoice_send_nfe(cr,
-    #                                                     uid, ids, context)
-    #
-    #     result = {}
-    #
-    #     for inv in self.browse(cr, uid, ids):
-    #         event_obj = self.pool.get('l10n_br_account.document_event')
-    #         xml = inv.account_document_event_ids[0].file_sent
-    #
-    #         danfe = xml[:-8]+'.pdf'
-    #         obj_attachment = self.pool.get('ir.attachment')
-    #
-    #         key = inv.nfe_access_key
-    #
-    #         try:
-    #             file_danfe=open(danfe,'r')
-    #             nfe_danfe = file_danfe.read()
-    #
-    #             attachment_id = obj_attachment.create(cr, uid, {
-    #                 'name':'{0}.pdf'.format(inv.nfe_access_key),
-    #                 'datas': base64.b64encode(nfe_danfe),
-    #                 'datas_fname': '.pdf',
-    #                 'description': '' or _('No Description'),
-    #                 'res_model': 'account.invoice',
-    #                 'res_id': inv.id,
-    #                 'type': 'binary'
-    #                 }, context)
-    #         except IOError:
-    #             key = 'erro'
-    #         else:
-    #             file_danfe.close()
-    #
-    #         try:
-    #             file_xml=open(xml,'r')
-    #             nfe_xml = file_xml.read()
-    #
-    #             attachment_id = obj_attachment.create(cr, uid, {
-    #                 'name':'{0}-nfe.xml'.format(key),
-    #                 'datas': base64.b64encode(nfe_xml),
-    #                 'datas_fname': '.xml',
-    #                 'description': '' or _('No Description'),
-    #                 'res_model': 'account.invoice',
-    #                 'res_id': inv.id
-    #                 }, context=context)
-    #         except IOError:
-    #             raise osv.except_osv(_('Warning!'), _('Verifique por problemas na transmissão!'))
-    #         else:
-    #             file_xml.close()
-    #     return True
-
-    # def cancel_invoice_online(self, cr, uid, ids, justificative, context=None):
-    #     result = super(AccountInvoice, self).cancel_invoice_online(cr,
-    #                                 uid, ids, justificative, context)
-    #
-    #     result = {}
-    #
-    #     for inv in self.browse(cr, uid, ids):
-    #         company_pool = self.pool.get('res.company')
-    #         company = company_pool.browse(cr, uid, inv.company_id.id)
-    #         nfe_key = inv.nfe_access_key
-    #
-    #         save_dir = os.path.join(monta_caminho_nfe(company, chave_nfe=nfe_key) + nfe_key + '-01-can.xml')
-    #
-    #         obj_attachment = self.pool.get('ir.attachment')
-    #
-    #         try:
-    #             file_xml=open(save_dir,'r')
-    #             nfe_xml = file_xml.read()
-    #
-    #             attachment_id = obj_attachment.create(cr, uid, {
-    #                 'name':'{0}-01-can.xml'.format(nfe_key),
-    #                 'datas': base64.b64encode(nfe_xml),
-    #                 'datas_fname': '.xml',
-    #                 'description': '' or _('No Description'),
-    #                 'res_model': 'account.invoice',
-    #                 'res_id': inv.id
-    #                 }, context=context)
-    #         except IOError:
-    #             key = 'erro'
-    #         else:
-    #             file_xml.close()
-    #
-    #     return True
-
-    # def cce_invoice_online(self, cr, uid, ids, sequencia, correcao, context=None):
-    #
-    #     for inv in self.browse(cr, uid, ids):
-    #         company_pool = self.pool.get('res.company')
-    #         company = company_pool.browse(cr, uid, inv.company_id.id)
-    #         nfe_key = inv.nfe_access_key
-    #         srt_aux = nfe_key + '-%02d-cce.xml' % sequencia
-    #
-    #         save_dir = os.path.join(monta_caminho_nfe(company, chave_nfe=nfe_key) + nfe_key + '-%02d-cce.xml' % sequencia)
-    #
-    #         obj_attachment = self.pool.get('ir.attachment')
-    #
-    #         try:
-    #             file_xml=open(save_dir,'r')
-    #             nfe_xml = file_xml.read()
-    #
-    #             attachment_id = obj_attachment.create(cr, uid, {
-    #                 'name': srt_aux.format(nfe_key),
-    #                 'datas': base64.b64encode(nfe_xml),
-    #                 'datas_fname': '.xml',
-    #                 'description': '' or _('No Description'),
-    #                 'res_model': 'account.invoice',
-    #                 'res_id': inv.id
-    #                 }, context=context)
-    #         except IOError:
-    #             key = 'erro'
-    #         else:
-    #             file_xml.close()
-    #
-    #     return True
-
 
     def attach_file_event(self, cr, uid, ids, seq, att_type, ext, context):
 
