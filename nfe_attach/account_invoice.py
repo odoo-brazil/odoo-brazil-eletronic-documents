@@ -38,8 +38,8 @@ class AccountInvoiceInvalidNumber(orm.Model):
 
             if att_type == 'inu':
                 save_dir = context['caminho']
-                str_aux = save_dir[-55:]
-                nfe_key = save_dir[-55:-12]
+                str_aux = save_dir[-53:]
+                nfe_key = save_dir[-53:-12]
 
             obj_attachment = self.pool.get('ir.attachment')
 
