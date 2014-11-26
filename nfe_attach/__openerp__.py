@@ -30,7 +30,7 @@
         'nfe',
     ],
     'data': ['data/nfe_attach_email.xml',
-             'res_company_view.xml'],
+             ],
     'demo': [],
     'test': [],
     'installable': True,

@@ -22,15 +22,21 @@ import datetime
 from openerp.osv import orm
 from openerp.tools.translate import _
 from .sped.nfe.document import NFe200
-from .sped.nfe.validator.xml import validation
+from .sped.nfe.document import NFe310
 from .sped.nfe.validator.config_check import validate_nfe_configuration, validate_invoice_cancel
 from .sped.nfe.processing.xml import monta_caminho_nfe
 from .sped.nfe.processing.xml import send, cancel
+
+from .sped.nfe.nfe_factory import NfeFactory
+from .sped.nfe.validator.xml import XMLValidator
 
 
 class AccountInvoice(orm.Model):
     """account_invoice overwritten methods"""
     _inherit = 'account.invoice'
+
+    def _get_nfe_factory(self, company):
+        return NfeFactory().get_nfe(company)
 
     def nfe_export(self, cr, uid, ids, context=None):
 
@@ -41,10 +47,19 @@ class AccountInvoice(orm.Model):
 
             validate_nfe_configuration(company)
 
-            nfe_obj = NFe200()
+            # if company.nfe_version == '3.10':
+            #     nfe_obj = NFe310()
+            # else:
+            #     nfe_obj = NFe200()
+
+            nfe_obj = self._get_nfe_factory(company)
+
+            # nfe_obj = NFe310()
             nfes = nfe_obj.get_xml(cr, uid, ids, int(company.nfe_environment))
+
             for nfe in nfes:
-                erro = validation(nfe['nfe'])
+                # erro = nfe_obj.validation(nfe['nfe'])
+                erro = XMLValidator.validation(nfe['nfe'], nfe_obj)
                 nfe_key = nfe['key'][3:]
                 if erro:
                     raise orm.except_orm(
@@ -84,6 +99,7 @@ class AccountInvoice(orm.Model):
     def action_invoice_send_nfe(self, cr, uid, ids, context=None):
 
         for inv in self.browse(cr, uid, ids):
+
             company_pool = self.pool.get('res.company')
             company = company_pool.browse(cr, uid, inv.company_id.id)
 
@@ -95,7 +111,16 @@ class AccountInvoice(orm.Model):
 
             arquivo = send_event.file_sent
 
-            nfe_obj = NFe200()
+            # if company.nfe_version == '3.10':
+            #     nfe_obj = NFe310()
+            #
+            # elif company.nfe_version == '2.00':
+            #     nfe_obj = NFe200()
+
+            nfe_obj = self._get_nfe_factory(company)
+
+            #TODO: altear versão
+            # nfe_obj = NFe310()
             nfe = []
             results = []
             protNFe = {}
@@ -114,8 +139,8 @@ class AccountInvoice(orm.Model):
                             'response': '',
                             'company_id': company.id,
                             'origin': '[NF-E]' + inv.internal_number,
-                            'file_sent': processo.arquivos[0]['arquivo'],
-                            'file_returned': processo.arquivos[1]['arquivo'],
+                            # 'file_sent': processo.arquivos[0]['arquivo'],
+                            # 'file_returned': processo.arquivos[1]['arquivo'],
                             'message': processo.resposta.xMotivo.valor,
                             'state': 'done',
                             'document_event_ids': inv.id}
@@ -130,6 +155,10 @@ class AccountInvoice(orm.Model):
                             vals["message"] = prot.infProt.xMotivo.valor
                             if prot.infProt.cStat.valor in ('100', '150', '110', '301', '302'):
                                 protNFe["state"] = 'open'
+
+                        self.attach_file_event(cr, uid, [inv.id], None, 'nfe', 'xml', context)
+                        self.attach_file_event(cr, uid, [inv.id], None, None, 'pdf', context)
+
             except Exception as e:
                 vals = {
                         'type': '-1',
@@ -186,17 +215,18 @@ class AccountInvoice(orm.Model):
                                 'response': '',
                                 'company_id': company.id,
                                 'origin': '[NF-E] {0}'.format(inv.internal_number),
-                                'file_sent': processo.arquivos[0]['arquivo'] if len(processo.arquivos) > 0 else '',
-                                'file_returned': processo.arquivos[1]['arquivo'] if len(processo.arquivos) > 0 else '',
+                                # 'file_sent': processo.arquivos[0]['arquivo'] if len(processo.arquivos) > 0 else '',
+                                # 'file_returned': processo.arquivos[1]['arquivo'] if len(processo.arquivos) > 0 else '',
                                 'message': processo.resposta.xMotivo.valor,
                                 'state': 'done',
                                 'document_event_ids': inv.id}
-                     
+
+                    self.attach_file_event(cr, uid, [inv.id], None, 'can', 'xml', context)
                     for prot in processo.resposta.retEvento:                        
                         vals["status"] = prot.infEvento.cStat.valor
                         vals["message"] = prot.infEvento.xEvento.valor
                         if vals["status"] == '135':
-                            result = super(AccountInvoice,self).action_cancel(cr, uid, [inv.id], context)
+                            result = super(AccountInvoice, self).action_cancel(cr, uid, [inv.id], context)
                             if result:
                                 self.write(cr, uid, [inv.id], {'state':'sefaz_cancelled',
                                                                'nfe_status': vals["status"]+ ' - ' +vals["message"]

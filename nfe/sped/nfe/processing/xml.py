@@ -43,7 +43,7 @@ def __processo(company):
     
     p = ProcessadorNFe()
     p.ambiente = int(company.nfe_environment)
-    p.versao = '2.00' if (company.nfe_version == '200') else '1.10'
+    p.versao = company.nfe_version
     p.estado = company.partner_id.l10n_br_city_id.state_id.code
     p.certificado.stream_certificado = base64.decodestring(company.nfe_a1_file)
     p.certificado.senha = company.nfe_a1_password
@@ -79,7 +79,7 @@ def send(company, nfe):
     logo_image = Image.open(StringIO(logo.decode('base64')))
     logo_image.save(company.nfe_export_folder + "/company_logo.png")
     p.danfe.logo = company.nfe_export_folder + '/company_logo.png'
-    p.danfe.nome_sistema = company.nfe_email
+    p.danfe.nome_sistema = company.nfe_email or u"Odoo/OpenERP - Sistema de Gestao Empresarial de Codigo Aberto - 100%% WEB - www.openerpbrasil.org"
     
     
     return p.processar_notas(nfe)

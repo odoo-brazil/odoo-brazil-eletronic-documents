@@ -2,6 +2,7 @@
 ###############################################################################
 #                                                                             #
 # Copyright (C) 2013  Renato Lima - Akretion                                  #
+# Copyright (C) 2014  Michell Stuttgart Faria - KMEE                          #
 #                                                                             #
 #This program is free software: you can redistribute it and/or modify         #
 #it under the terms of the GNU Affero General Public License as published by  #
@@ -20,13 +21,30 @@
 from openerp.osv import orm
 from openerp.tools.translate import _
 
-def validation(nfe_xml):
-    try:
-        from pysped.nfe.leiaute import NFe_200, Det_200, NFRef_200, Dup_200
-        nfe = NFe_200()
+# def validation(nfe_xml):
+#     try:
+#         from pysped.nfe.leiaute import NFe_200, Det_200, NFRef_200, Dup_200
+#         nfe = NFe_200()
+#         nfe.set_xml(nfe_xml)
+#     except ImportError:
+#         raise orm.except_orm(
+#             _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
+#     return nfe.validar()
+
+
+class XMLValidator(object):
+
+    @staticmethod
+    def validation(nfe_xml, nfe_obj):
+
+        nfe = nfe_obj.get_NFe()
         nfe.set_xml(nfe_xml)
-    except ImportError:
-        raise orm.except_orm(
-            _(u'Erro!'), _(u"Biblioteca PySPED não instalada!"))
-    return nfe.validar()
+
+        return nfe.validar()
+
+
+
+
+
+
 
