@@ -18,12 +18,16 @@
 ###############################################################################
 
 import datetime
+import logging
 from openerp import netsvc
 from openerp.osv import orm, fields
 from openerp.tools.translate import _
-from sped.nfe.validator.config_check import *
-from .sped.nfe.processing.xml import invalidate
+from openerp.addons.nfe.sped.nfe.validator.config_check import *
+from openerp.addons.nfe.sped.nfe.processing.xml import invalidate
+from dbus.bus import _logger
+from sys import exc_info
 
+_logger = logging.getLogger(__name__)
 
 class L10n_brAccountInvoiceInvalidNumber(orm.Model):
     _inherit = 'l10n_br_account.invoice.invalid.number'
@@ -39,6 +43,20 @@ class L10n_brAccountInvoiceInvalidNumber(orm.Model):
             u'Eventos', states={'done':[('readonly',True)]}),
     }
 
+    def attach_file_event(self, cr, uid, ids, seq, att_type, ext, context):
+        """
+        Implemente esse metodo na sua classe de manipulação de arquivos
+        :param cr:
+        :param uid:
+        :param ids:
+        :param seq:
+        :param att_type:
+        :param ext:
+        :param context:
+        :return:
+        """
+        return False
+
     def action_draft_done(self, cr, uid, ids, context=None, *args):
         try:
             processo = self.send_request_to_sefaz(cr, uid, ids, args)
@@ -50,7 +68,7 @@ class L10n_brAccountInvoiceInvalidNumber(orm.Model):
                 values['state'] = 'done'
                 values['status'] = '102'
                 self.write(cr, uid, ids, values, context=context)
-                context['caminho'] = processo.arquivos[0]['arquivo']
+                # context['caminho'] = processo.arquivos[0]['arquivo']
                 self.attach_file_event(cr, uid, ids, None, 'inu', 'xml', context)
             else:
                 values['state'] = 'not_authorized'
@@ -82,14 +100,15 @@ class L10n_brAccountInvoiceInvalidNumber(orm.Model):
                             'response': '',
                             'company_id': company.id,
                             'origin': '[INU] {0} - {1}'.format(str(item.number_start), str(item.number_end)),
-                            'file_sent': processo.arquivos[0]['arquivo'],
-                            'file_returned': processo.arquivos[1]['arquivo'],
+                        #    'file_sent': processo.arquivos[0]['arquivo'],
+                        #    'file_returned': processo.arquivos[1]['arquivo'],
                             'message': processo.resposta.infInut.xMotivo.valor,
                             'state': 'done',
                             'document_event_ids': item.id}
                 results.append(vals)
                            
             except Exception as e:
+                _logger.error(e.message,exc_info=True)
                 vals = {
                         'type': '-1',
                         'status': '000',

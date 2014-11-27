@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 ##############################################################################
 #
-#    KMEE, KM Enterprising Engineering
-#    Copyright (C) 2014 - Michell Stuttgart Faria (<http://www.kmee.com.br>).
+#    Account Payment Partner module for OpenERP
+#    Copyright (C) 2012 KMEE (http://www.kmee.com.br)
+#    @author Rodolfo Leme Bertozo
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -18,27 +19,4 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
-
-class NfeFactory(object):
-
-    def get_nfe(self, nfe_version):
-        """
-        Retorna objeto NFe de acordo com a versao de NFe em uso no OpenERP
-        :param company: objeto res.company
-        :return: Objeto Nfe
-        """
-        if nfe_version == '3.10':
-            from openerp.addons.l10n_br_account_product.sped.nfe.document import NFe310
-            nfe_obj = NFe310()
-        else:
-            from openerp.addons.l10n_br_account_product.sped.nfe.document import NFe200
-            nfe_obj = NFe200()
-        return nfe_obj
-
-
-
-
-
-
-
+import report
