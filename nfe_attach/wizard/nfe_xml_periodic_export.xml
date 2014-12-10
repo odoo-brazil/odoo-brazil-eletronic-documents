@@ -9,8 +9,7 @@
                     <field invisible="1" name="state"/>
                     <group>
                         <group states = "init">
-                            <field name="start_date"/>
-                            <field name="final_date"/>
+                            <field name="period_id"/>
                         </group>
                         <group states = "done">
                             <field name="zip_file" colspan="4" filename="name"/>

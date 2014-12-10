@@ -29,7 +29,9 @@
         'document',
         'nfe',
     ],
-    'data': ['data/nfe_attach_email.xml',
+    'data': [
+        'data/nfe_attach_email.xml',
+        'wizard/nfe_xml_periodic_export.xml',
              ],
     'demo': [],
     'test': [],

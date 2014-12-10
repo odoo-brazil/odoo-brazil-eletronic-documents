@@ -17,6 +17,4 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.        #
 ###############################################################################
 
-import l10n_br_account_document_status_sefaz
-import nfe_invoice_cce
-import nfe_invoice_cancel
+import nfe_xml_periodic_export

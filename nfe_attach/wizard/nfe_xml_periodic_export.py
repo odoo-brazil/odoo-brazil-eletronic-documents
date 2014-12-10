@@ -13,8 +13,7 @@ class NfeXmlPeriodicExport(orm.TransientModel):
     _description = 'Export NFes'
     _columns = {
         'name': fields.char('Nome', size=255),
-        'start_date': fields.date('Initial date'),
-        'final_date': fields.date('Final date'),
+        'period_id': fields.many2one('account.period', u'Período'),
         'zip_file': fields.binary('Zip Files', readonly=True),
         'state': fields.selection([('init', 'init'), ('done', 'done')], 'state', readonly=True),
     }
@@ -27,6 +26,7 @@ class NfeXmlPeriodicExport(orm.TransientModel):
         return True
 
     def export(self, cr, uid, ids, context=False):
+        result = False
         a = self.pool.get('res.company')
         objs_res_company = a.browse(cr, uid, [1])
 
@@ -45,13 +45,18 @@ class NfeXmlPeriodicExport(orm.TransientModel):
         dirs_date = os.listdir(caminho)
 
         for obj in self.browse(cr, uid, ids):
+            data = False
             caminho_arquivos = ''
-            bkp_name = 'bkp_' + obj.start_date[:7] + '_' + obj.final_date[:7] + '.zip'
+            
+            date_start = obj.period_id.date_start
+            date_stop = obj.period_id.date_stop
+            
+            bkp_name = 'bkp_' + date_start[:7] + '_' + date_stop[:7] + '.zip'
 
             for diretorio in dirs_date:
 
-                if (int(diretorio[:4]) >= int(obj.start_date[:4]) and int(diretorio[5:]) >= int(obj.start_date[5:7])) and \
-                   (int(diretorio[:4]) <= int(obj.final_date[:4]) and int(diretorio[5:]) <= int(obj.final_date[5:7])):
+                if (int(diretorio[:4]) >= int(date_start[:4]) and int(diretorio[5:]) >= int(date_start[5:7])) and \
+                   (int(diretorio[:4]) <= int(date_stop[:4]) and int(diretorio[5:]) <= int(date_stop[5:7])):
 
                     caminho_aux = caminho + '/' + diretorio
                     dirs_nfes = os.listdir(caminho_aux)
@@ -93,7 +98,7 @@ class NfeXmlPeriodicExport(orm.TransientModel):
                     self.write(cr, uid, ids, {'state': 'done', 'zip_file': base64.b64encode(itemFile),
                                               'name': bkp_name}, context=context)
 
-        if result == 0:
+        if data:
             return {
             'type': 'ir.actions.act_window',
             'res_model': self._name,
@@ -102,5 +107,4 @@ class NfeXmlPeriodicExport(orm.TransientModel):
             'res_id': data['id'],
             'target': 'new',
         }
-        else:
-            return False
+        return False
