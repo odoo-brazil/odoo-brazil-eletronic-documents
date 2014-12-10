@@ -13,9 +13,13 @@ class NfeXmlPeriodicExport(orm.TransientModel):
     _description = 'Export NFes'
     _columns = {
         'name': fields.char('Nome', size=255),
-        'period_id': fields.many2one('account.period', u'Período'),
+        'start_period_id': fields.many2one('account.period', u'Período Inicial'),
+        'stop_period_id': fields.many2one('account.period', u'Período Final'),
         'zip_file': fields.binary('Zip Files', readonly=True),
-        'state': fields.selection([('init', 'init'), ('done', 'done')], 'state', readonly=True),
+        'state': fields.selection([('init', 'init'),
+                                   ('done', 'done')],
+                                    'state',
+                                    readonly=True),
     }
 
     _defaults = {
@@ -28,18 +32,19 @@ class NfeXmlPeriodicExport(orm.TransientModel):
     def export(self, cr, uid, ids, context=False):
         result = False
         a = self.pool.get('res.company')
-        objs_res_company = a.browse(cr, uid, [1])
 
-        for obj_res_company in objs_res_company:
+        # Define a empresa correta se for multcompany
+        company_id = a._company_default_get(cr, uid)
+        obj_res_company = a.browse(cr, uid, company_id)
 
-            caminho = str(obj_res_company.nfe_import_folder)
-            export_dir = str(obj_res_company.nfe_export_folder)
+        caminho = str(obj_res_company.nfe_import_folder)
+        export_dir = str(obj_res_company.nfe_export_folder)
 
-            #completa o caminho com homologacao ou producao
-            if obj_res_company.nfe_environment == '1':
-                caminho = caminho + '/producao'
-            elif obj_res_company.nfe_environment == '2':
-                caminho = caminho + '/homologacao'
+        #completa o caminho com homologacao ou producao
+        if obj_res_company.nfe_environment == '1':
+            caminho = os.path.join(caminho, 'producao')
+        elif obj_res_company.nfe_environment == '2':
+            caminho = os.path.join(caminho, 'homologacao')
 
         # Diretorios de importacao, diretorios com formato do ano e mes
         dirs_date = os.listdir(caminho)
@@ -48,22 +53,22 @@ class NfeXmlPeriodicExport(orm.TransientModel):
             data = False
             caminho_arquivos = ''
             
-            date_start = obj.period_id.date_start
-            date_stop = obj.period_id.date_stop
+            date_start = obj.start_period_id.date_start
+            date_stop = obj.stop_period_id.date_stop
             
             bkp_name = 'bkp_' + date_start[:7] + '_' + date_stop[:7] + '.zip'
 
             for diretorio in dirs_date:
-
+                # TODO tratar pastas que não são geradas pelo sistema (que não estão no formato (ano-mes) aaaa-mm)
                 if (int(diretorio[:4]) >= int(date_start[:4]) and int(diretorio[5:]) >= int(date_start[5:7])) and \
                    (int(diretorio[:4]) <= int(date_stop[:4]) and int(diretorio[5:]) <= int(date_stop[5:7])):
 
-                    caminho_aux = caminho + '/' + diretorio
+                    caminho_aux = os.path.join(caminho, diretorio)
                     dirs_nfes = os.listdir(caminho_aux)
 
                     for diretorio_final in dirs_nfes:
 
-                        caminho_final = caminho_aux + '/' + diretorio_final + '/'
+                        caminho_final = os.path.join(caminho_aux, diretorio_final) + '/'
                         comando_cce = 'ls ' + caminho_final + '*-??-cce.xml'
                         comando_can = 'ls ' + caminho_final + '*-??-can.xml'
                         comando_nfe = 'ls ' + caminho_final + '*-nfe.xml| grep -E "[0-9]{44}-nfe.xml"'
@@ -88,11 +93,12 @@ class NfeXmlPeriodicExport(orm.TransientModel):
 
                     # troca \n por espaços
                     caminho_arquivos = caminho_arquivos.replace('\n', ' ')
-                    result = os.system("zip -r " + export_dir + '/' + bkp_name + ' ' + caminho_arquivos)
+                    result = os.system("zip -r " + os.path.join(export_dir, bkp_name) + ' ' + caminho_arquivos)
+                    # teste_comando= commands.getoutput("zip -r " + os.path.join(export_dir, bkp_name) + ' ' + caminho_arquivos)
 
                     data = self.read(cr, uid, ids, [], context=context)[0]
 
-                    orderFile=open(export_dir + '/' + bkp_name, 'r')
+                    orderFile=open(os.path.join(export_dir, bkp_name), 'r')
                     itemFile = orderFile.read()
 
                     self.write(cr, uid, ids, {'state': 'done', 'zip_file': base64.b64encode(itemFile),
