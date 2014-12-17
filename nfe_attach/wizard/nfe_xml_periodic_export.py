@@ -56,7 +56,7 @@ class NfeXmlPeriodicExport(orm.TransientModel):
         if export_dir == 'False':
             raise orm.except_orm(
                 u'Erro!',
-                u'Necessário configurar pasta de exportação da empresa',)
+                u'Necessário configurar pasta de exportação da empresa.',)
 
         caminho = export_dir
 
@@ -72,14 +72,18 @@ class NfeXmlPeriodicExport(orm.TransientModel):
         except:
             raise orm.except_orm(
                 u'Erro!',
-                u'Necessário configurar pasta de exportação da empresa',)
+                u'Necessário configurar pasta de exportação da empresa.',)
 
         for obj in self.browse(cr, uid, ids):
             data = False
             caminho_arquivos = ''
             date_start = obj.start_period_id.date_start
             date_stop = obj.stop_period_id.date_stop
-            bkp_name = 'bkp_' + date_start[:7] + '_' + date_stop[:7] + '.zip'
+
+            if date_start[:7] == date_stop[:7]:
+                bkp_name = 'bkp_' + date_start[:7] + '.zip'
+            else:
+                bkp_name = 'bkp_' + date_start[:7] + '_' + date_stop[:7] + '.zip'
 
             for diretorio in dirs_date:
                 #se houver arquivos fora do padrão (ano-mes, aaaa-mm) dentro
@@ -140,8 +144,8 @@ class NfeXmlPeriodicExport(orm.TransientModel):
                         itemFile = orderFile.read()
 
                         self.write(cr, uid, ids,
-                                    {'state': 'done', 'zip_file':
-                                    base64.b64encode(itemFile),
+                                    {'state': 'done',
+                                    'zip_file': base64.b64encode(itemFile),
                                     'name': bkp_name}, context=context)
                 except:
                     pass
@@ -149,7 +153,7 @@ class NfeXmlPeriodicExport(orm.TransientModel):
             if result:
                 raise orm.except_orm(
                 u'Erro!',
-                u'Não foi possível compactar os arquivos',)
+                u'Não foi possível compactar os arquivos.',)
 
         if data:
             return {'type': 'ir.actions.act_window',
@@ -158,5 +162,10 @@ class NfeXmlPeriodicExport(orm.TransientModel):
                     'view_type': 'form',
                     'res_id': data['id'],
                     'target': 'new', }
+        else:
+            raise orm.except_orm(
+                u'Atenção!',
+                u'Não existem arquivos nesse período'
+                u' ou período inválido.',)
 
         return False
