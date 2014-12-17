@@ -47,12 +47,17 @@ class NfeXmlPeriodicExport(orm.TransientModel):
 
     def export(self, cr, uid, ids, context=False):
         a = self.pool.get('res.company')
-
+        result = 0
         # Define a empresa correta se for multcompany
         company_id = a._company_default_get(cr, uid)
         obj_res_company = a.browse(cr, uid, company_id)
-
         export_dir = str(obj_res_company.nfe_export_folder)
+
+        if export_dir == 'False':
+            raise orm.except_orm(
+                u'Erro!',
+                u'Necessário configurar pasta de exportação da empresa',)
+
         caminho = export_dir
 
         #completa o caminho com homologacao ou producao
@@ -61,8 +66,13 @@ class NfeXmlPeriodicExport(orm.TransientModel):
         elif obj_res_company.nfe_environment == '2':
             caminho = os.path.join(caminho, 'homologacao')
 
-        # Diretorios de importacao, diretorios com formato do ano e mes
-        dirs_date = os.listdir(caminho)
+        try:
+            # Diretorios de importacao, diretorios com formato do ano e mes
+            dirs_date = os.listdir(caminho)
+        except:
+            raise orm.except_orm(
+                u'Erro!',
+                u'Necessário configurar pasta de exportação da empresa',)
 
         for obj in self.browse(cr, uid, ids):
             data = False
@@ -125,16 +135,21 @@ class NfeXmlPeriodicExport(orm.TransientModel):
                                             bkp_name) + ' ' + caminho_arquivos)
 
                         data = self.read(cr, uid, ids, [], context=context)[0]
-
                         orderFile = open(os.path.join(export_dir,
                                             bkp_name), 'r')
                         itemFile = orderFile.read()
 
-                        self.write(cr, uid, ids, {'state': 'done', 'zip_file':
-                                        base64.b64encode(itemFile),
-                                        'name': bkp_name}, context=context)
+                        self.write(cr, uid, ids,
+                                    {'state': 'done', 'zip_file':
+                                    base64.b64encode(itemFile),
+                                    'name': bkp_name}, context=context)
                 except:
                     pass
+
+            if result:
+                raise orm.except_orm(
+                u'Erro!',
+                u'Não foi possível compactar os arquivos',)
 
         if data:
             return {'type': 'ir.actions.act_window',
