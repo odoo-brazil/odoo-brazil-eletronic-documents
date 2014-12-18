@@ -137,6 +137,10 @@ class NfeXmlPeriodicExport(orm.TransientModel):
                         caminho_arquivos = caminho_arquivos.replace('\n', ' ')
                         result = os.system("zip -r " + os.path.join(export_dir,
                                             bkp_name) + ' ' + caminho_arquivos)
+                        if result:
+                            raise orm.except_orm(
+                            u'Erro!',
+                            u'Não foi possível compactar os arquivos.',)
 
                         data = self.read(cr, uid, ids, [], context=context)[0]
                         orderFile = open(os.path.join(export_dir,
@@ -149,11 +153,6 @@ class NfeXmlPeriodicExport(orm.TransientModel):
                                     'name': bkp_name}, context=context)
                 except:
                     pass
-
-            if result:
-                raise orm.except_orm(
-                u'Erro!',
-                u'Não foi possível compactar os arquivos.',)
 
         if data:
             return {'type': 'ir.actions.act_window',
