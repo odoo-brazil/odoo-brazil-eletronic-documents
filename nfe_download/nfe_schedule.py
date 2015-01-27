@@ -16,7 +16,6 @@
 #You should have received a copy of the GNU Affero General Public License     #
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.        #
 ###############################################################################
-import base64
 import logging
 from datetime import datetime
 from .service.nfe_download import distribuicao_nfe, download_nfe
@@ -64,10 +63,9 @@ class nfe_schedule(models.TransientModel):
                     
                     env_events.create(event)                
             except Exception as ex:
-                _logger.error(_(u'Invoice in invalid state to cancel online'),exc_info=True)
+                _logger.error(str(ex),exc_info=True)
 
     @api.one
     def execute_download(self):
-        pass
-   
+        self.schedule_download()
    

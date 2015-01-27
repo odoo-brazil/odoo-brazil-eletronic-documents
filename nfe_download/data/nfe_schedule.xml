@@ -6,7 +6,7 @@
         <record id="ir_cron_download_nfe_scheduler0" model="ir.cron">
             <field eval="&quot;&quot;&quot;schedule_download&quot;&quot;&quot;" name="function"/>
             <field name="interval_number">1</field>
-            <field name="interval_type">minutes</field>
+            <field name="interval_type">hours</field>
             <field name="user_id" ref="base.user_root"/>
             <field eval="&quot;&quot;&quot;Agendamento NFe Download&quot;&quot;&quot;" name="name"/>
             <field eval="-1" name="numbercall"/>

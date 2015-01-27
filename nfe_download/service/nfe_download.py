@@ -17,6 +17,7 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.        #
 ###############################################################################
 import re
+import os
 import base64
 from pysped.nfe import ProcessadorNFe
 
@@ -24,7 +25,6 @@ def __processo(company):
     
     p = ProcessadorNFe()
     p.ambiente = int(company.nfe_environment)
-    #p.versao = company.nfe_version
     p.estado = company.partner_id.l10n_br_city_id.state_id.code
     p.certificado.stream_certificado = base64.decodestring(company.nfe_a1_file)
     p.certificado.senha = company.nfe_a1_password
@@ -60,14 +60,21 @@ def download_nfe(company, list_nfe):
     p = __processo(company)
     cnpj_partner = re.sub('[^0-9]','', company.cnpj_cpf)   
     result = p.baixar_notas_destinadas(cnpj=cnpj_partner, lista_chaves=list_nfe)
+    import_folder = company.nfe_import_folder
     
     if result.resposta.status == 200: #Webservice ok
         if result.resposta.cStat.valor == '139':
             list_nfe = []
             
             for nfe in result.resposta.retNFe:
-                #TODO Salvar o xml
-                item = { 'file_xml': nfe.procNFeZip.valor, 'code': nfe.cStat.valor, 'message': nfe.xMotivo.valor }
+                
+                nome_arq = os.path.join(import_folder, 'download_nfe/')
+                nome_arq = nome_arq + '-download-nfe.xml'
+                arq = open(nome_arq, 'w')
+                arq.write(nfe.procNFeZip.valor.encode('utf-8'))
+                arq.close()
+                
+                item = { 'file_xml': nome_arq, 'code': nfe.cStat.valor, 'message': nfe.xMotivo.valor }
                 list_nfe.append(item)       
             
             return list_nfe
