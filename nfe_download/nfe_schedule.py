@@ -17,10 +17,14 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.        #
 ###############################################################################
 import logging
+import base64
+import gzip
+import cStringIO 
 from datetime import datetime
 from .service.nfe_download import distribuicao_nfe, download_nfe
 from openerp import models, api, fields
 from openerp.addons.nfe.sped.nfe.validator.config_check import validate_nfe_configuration
+from pysped.nfe.leiaute import RetDistDFeInt_100
 
 _logger = logging.getLogger(__name__)
 
@@ -68,4 +72,15 @@ class nfe_schedule(models.TransientModel):
     @api.one
     def execute_download(self):
         self.schedule_download()
-   
+        arq = open('/home/danimar/projetos/exportacao/homologacao/dfe-resumo/2015-01/resumo_nfe-000000000000001.xml', 'r')
+        xml = arq.read()
+        arq.close()
+        ret = RetDistDFeInt_100()
+        ret.set_xml(xml)
+        xml = ret.loteDistDFeInt.docZip[0].base64Binary.valor
+        
+        orig_file_desc = gzip.GzipFile(mode='r', 
+                          fileobj=cStringIO.StringIO(base64.b64decode(xml)))
+        orig_file_cont = orig_file_desc.read()
+        orig_file_desc.close()
+        print orig_file_cont

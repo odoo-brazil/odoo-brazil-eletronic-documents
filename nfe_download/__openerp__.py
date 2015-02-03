@@ -42,6 +42,7 @@
     ],
     'data': [
         'data/nfe_schedule.xml',
+        'views/nfe_mde_view.xml'
     ],
     'installable': True,
     'active': False,

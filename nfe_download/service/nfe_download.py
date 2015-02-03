@@ -19,7 +19,10 @@
 import re
 import os
 import base64
+import gzip
+import cStringIO
 from pysped.nfe import ProcessadorNFe
+from datetime import datetime
 
 def __processo(company):
     
@@ -38,6 +41,20 @@ def _format_nse(nsu):
     nsu = long(nsu)
     return "%015d" % (nsu,)
 
+def _create_dirs(company):
+    caminho = company.nfe_export_folder
+    ambiente = int(company.nfe_environment)
+    if ambiente == 1:
+        caminho = os.path.join(caminho, 'producao/dfe-resumo/')
+    else:
+        caminho = os.path.join(caminho, 'homologacao/dfe-resumo/')
+    caminho = os.path.join(caminho, datetime.now().strftime('%Y-%m') + '/')
+    try:
+        os.makedirs(caminho)
+    except:
+        pass
+    return caminho
+
 def distribuicao_nfe(company, ultimo_nsu):
     ultimo_nsu = _format_nse(ultimo_nsu)
     p = __processo(company)
@@ -47,8 +64,22 @@ def distribuicao_nfe(company, ultimo_nsu):
     if result.resposta.status == 200: #Webservice ok
         if result.resposta.cStat.valor == '137' or result.resposta.cStat.valor == '138':
             
+            nfe_list = []
+            save_path =_create_dirs(company)
+            for doc in result.resposta.loteDistDFeInt.docZip:                        
+                orig_file_desc = gzip.GzipFile(mode='r', 
+                              fileobj=cStringIO.StringIO(base64.b64decode(doc.base64Binary.valor)))
+                orig_file_cont = orig_file_desc.read()
+                orig_file_desc.close()
+                nfe_list.append(orig_file_cont)
+                
+                save_path = os.path.join(save_path, 'resumo_nfe-' +  doc.NSU.valor + '.xml')
+                arq = open(save_path, 'w')
+                arq.write(orig_file_cont.encode('utf-8'))
+                arq.close()                                
+            
             return { 'code': result.resposta.cStat.valor, 'message': result.resposta.xMotivo.valor,
-               'list_nfe': result.resposta.loteDistDFeInt.docZip}
+               'list_nfe': nfe_list, 'file_returned': result.resposta.xml}
         else:
             return { 'code': result.resposta.cStat.valor, 'message': result.resposta.xMotivo.valor,
                'file_sent': result.envio.xml, 'file_returned': result.resposta.xml }

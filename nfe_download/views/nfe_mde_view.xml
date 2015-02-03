@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<openerp>
+	<data>
+
+		<record model="ir.ui.view" id="view_nfe_mde_form">
+			<field name="name">nfe_mde.form</field>
+			<field name="model">nfe.mde</field>
+			<field name="type">form</field>
+			<field name="arch" type="xml">
+				<form string="Manifestacao" version="7.0">
+					<header>
+						<button name="action_known_emission" string="Ciência da Emissão" type="object"/>
+						<button name="action_confirm_operation" string="Confirmar Operação" type="object"/>
+						<button name="action_unknown_operation" string="Desconhecer Operação" type="object"/>
+						<button name="action_not_operation" string="Operação não Realizada" type="object"/>
+						<button name="action_download_xml" string="Download do XML" type="object"/>
+					</header>
+					<group>
+						<field name="chNFe" select="1"/>
+						<field name="nSeqEvento" />					
+						<field name="xNome" />
+						<field name="partner_id" />
+						<field name="dEmi" />
+						<field name="tpNF" />
+						<field name="vNF" />
+						<field name="cSitNFe" />
+						<field name="cSitConf"/>
+						<field name="formInclusao" />
+						<field name="dataInclusao" />
+						<field name="versao" />
+					</group>	
+				</form>
+			</field>
+		</record>
+		
+		<record id="view_nfe_mde_filter" model="ir.ui.view">
+            <field name="name">nfe.mde.select</field>
+            <field name="model">nfe.mde</field>
+            <field name="arch" type="xml">
+				<search string="Filtrar">
+				    <field name="partner_id" string="Parceiro"/>
+				    <field name="cSitConf" string="Situação"/>    
+				    <filter name="situacao" string="Pendentes" domain="[('cSitConf','=','0')]" help="NF-e esperando manifestação"/>
+				</search>
+			</field>
+        </record>
+		
+		<record model="ir.ui.view" id="view_nfe_mde_tree">
+			<field name="name">nfe_mde.tree</field>
+			<field name="model">nfe.mde</field>
+			<field name="type">tree</field>
+			<field name="arch" type="xml">
+				<tree string="NFe Destinadas">
+					<field name="nSeqEvento"/>
+					<field name="xNome"/>
+					<field name="dEmi"/>
+					<field name="vNF"/>
+					<field name="cSitConf" invisible="1"/>
+				</tree>
+			</field>
+		</record>
+		
+		<record model="ir.actions.act_window" id="action_nfe_mde">
+			<field name="name">Manifestacao</field>
+			<field name="res_model">nfe.mde</field>
+			<field name="view_type">form</field>
+			<field name="view_mode">tree,form</field>
+			<field name="search_view_id" ref="view_nfe_mde_filter"/>
+			<field name="context">{"search_default_situacao":1}</field>
+		</record>
+		
+		<menuitem name="Manifestação do Destinatário" id="menu_nfe_mde" action="action_nfe_mde" parent="account.menu_finance_payables" sequence="1"/>
+
+	</data>
+</openerp>
