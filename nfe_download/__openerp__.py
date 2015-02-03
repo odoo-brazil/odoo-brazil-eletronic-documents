@@ -38,7 +38,8 @@
         sudo pip install geraldo
     """,
     'depends': [
-        'nfe'
+        'nfe',
+        'nfe_attach',
     ],
     'data': [
         'data/nfe_schedule.xml',
