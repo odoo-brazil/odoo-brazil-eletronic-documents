@@ -20,8 +20,9 @@ import logging
 import base64
 import gzip
 import cStringIO 
+from lxml import objectify
 from datetime import datetime
-from .service.nfe_download import distribuicao_nfe, download_nfe
+from .service.nfe_download import distribuicao_nfe
 from openerp import models, api, fields
 from openerp.addons.nfe.sped.nfe.validator.config_check import validate_nfe_configuration
 from pysped.nfe.leiaute import RetDistDFeInt_100
@@ -46,17 +47,26 @@ class nfe_schedule(models.TransientModel):
                 
                 if nfe_result['code'] == '137' or nfe_result['code'] == '138':
                     
-                    nfes = download_nfe(company, nfe_result['list_nfe'])    
-                            
-                    for nfe in nfes:
-                                    
-                        event = {'type':'12', 'response':'Download efetuado', 'company_id': company.id ,
-                                 'file_returned': nfe['file_xml'], 'status':nfe_result['code'] , 
+                    event = {'type':'12', 'response':'Consulta distribuição executado com sucesso', 'company_id': company.id ,
+                                 'file_returned': nfe_result['file_returned'], 'status':nfe_result['code'] , 
                                  'message': nfe_result['message'], 'create_date':datetime.now(), 
                                  'write_date':datetime.now(), 'end_date':datetime.now(),
                                  'state': 'done', 'origin': 'Scheduler Download' }
                     
-                        env_events.create(event)        
+                    env_events.create(event)  
+                    env_mde = self.env['nfe.mde']
+                        
+                    for nfe in nfe_result['list_nfe']:                        
+                        root = objectify.fromstring(nfe['xml'])
+                        
+                        invoice_eletronic = { 'file_path': nfe['path'], 'chNFe': root.chNFe,
+                                    'nSeqEvento': nfe['NSU'], 'xNome': root.xNome, 'tpNF': root.tpNF,
+                                    'vNF': root.vNF, 'cSitNFe': root.cSitNFe, 'cSitConf':'0',
+                                    'dataInclusao':datetime.now(), 'CNPJ':root.CNPJ, 'IE': root.IE,
+                                    'company_id': company.id, 'formInclusao': u'Verificação agendada'}
+                        
+                        env_mde.create(invoice_eletronic)           
+                              
                 else:
                     
                     event = {'type':'12', 'response':'Consulta distribuição com problemas', 'company_id': company.id ,
@@ -71,16 +81,18 @@ class nfe_schedule(models.TransientModel):
 
     @api.one
     def execute_download(self):
-        self.schedule_download()
+        #self.schedule_download()
         arq = open('/home/danimar/projetos/exportacao/homologacao/dfe-resumo/2015-01/resumo_nfe-000000000000001.xml', 'r')
         xml = arq.read()
         arq.close()
-        ret = RetDistDFeInt_100()
-        ret.set_xml(xml)
-        xml = ret.loteDistDFeInt.docZip[0].base64Binary.valor
         
-        orig_file_desc = gzip.GzipFile(mode='r', 
-                          fileobj=cStringIO.StringIO(base64.b64decode(xml)))
-        orig_file_cont = orig_file_desc.read()
-        orig_file_desc.close()
-        print orig_file_cont
+        root = objectify.fromstring(xml)
+        
+        env_mde = self.env['nfe.mde']
+        
+        invoice_eletronic = { 'file_path': '/home/danimar/projetos/exportacao/homologacao/dfe-resumo/2015-01/resumo_nfe-000000000000001.xml', 'chNFe': root.chNFe,
+                    'nSeqEvento': '000000000000001', 'xNome': root.xNome, 'tpNF': root.tpNF,
+                    'vNF': root.vNF, 'cSitNFe': root.cSitNFe, 'cSitConf':'0',
+                    'dataInclusao':datetime.now(), 'CNPJ': root.CNPJ, 'IE':root.IE}
+        
+        env_mde.create(invoice_eletronic)  

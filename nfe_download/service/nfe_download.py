@@ -70,13 +70,14 @@ def distribuicao_nfe(company, ultimo_nsu):
                 orig_file_desc = gzip.GzipFile(mode='r', 
                               fileobj=cStringIO.StringIO(base64.b64decode(doc.base64Binary.valor)))
                 orig_file_cont = orig_file_desc.read()
-                orig_file_desc.close()
-                nfe_list.append(orig_file_cont)
+                orig_file_desc.close()                
                 
                 save_path = os.path.join(save_path, 'resumo_nfe-' +  doc.NSU.valor + '.xml')
                 arq = open(save_path, 'w')
                 arq.write(orig_file_cont.encode('utf-8'))
-                arq.close()                                
+                arq.close()       
+                
+                nfe_list.append({ 'path':save_path, 'xml': orig_file_cont, 'NSU': doc.NSU.valor})                         
             
             return { 'code': result.resposta.cStat.valor, 'message': result.resposta.xMotivo.valor,
                'list_nfe': nfe_list, 'file_returned': result.resposta.xml}
@@ -87,6 +88,25 @@ def distribuicao_nfe(company, ultimo_nsu):
         return { 'code': result.resposta.status, 'message': result.resposta.reason, 
                 'file_sent': result.envio.xml, 'file_returned': None }
     
+def known_emission(company, nfe_key):
+    p = __processo(company)
+    cnpj_partner = re.sub('[^0-9]','', company.cnpj_cpf)
+    result = p.conhecer_operacao_evento(
+        cnpj=cnpj_partner, # CNPJ do destinatário/gerador do evento
+        chave_nfe=nfe_key )
+    
+    if result.resposta.status == 200: #Webservice ok
+        if result.resposta.cStat.valor =='128': 
+            inf_evento = result.resposta.retEvento[0].infEvento
+            return { 'code': inf_evento.cStat.valor, 'message': inf_evento.xMotivo.valor,
+                    'file_sent': result.envio.xml, 'file_returned': result.resposta.xml }
+        else:
+            return { 'code': result.resposta.cStat.valor, 'message': result.resposta.xMotivo.valor,
+                    'file_sent': result.envio.xml, 'file_returned': result.resposta.xml }
+    else:
+        return { 'code': result.resposta.status, 'message': result.resposta.reason, 
+                'file_sent': result.envio.xml, 'file_returned': None }
+
 def download_nfe(company, list_nfe):
     p = __processo(company)
     cnpj_partner = re.sub('[^0-9]','', company.cnpj_cpf)   
@@ -95,20 +115,22 @@ def download_nfe(company, list_nfe):
     
     if result.resposta.status == 200: #Webservice ok
         if result.resposta.cStat.valor == '139':
-            list_nfe = []
-            
-            for nfe in result.resposta.retNFe:
+            nfe = result.resposta.retNFe[0]
+            if nfe.cStat.valor == '140':             
                 
                 nome_arq = os.path.join(import_folder, 'download_nfe/')
-                nome_arq = nome_arq + '-download-nfe.xml'
+                nome_arq = nome_arq + nfe.chNFe.valor +  'download-nfe.xml'
                 arq = open(nome_arq, 'w')
-                arq.write(nfe.procNFeZip.valor.encode('utf-8'))
+                arq.write(nfe.procNFe.valor.encode('utf-8'))
                 arq.close()
                 
-                item = { 'file_xml': nome_arq, 'code': nfe.cStat.valor, 'message': nfe.xMotivo.valor }
-                list_nfe.append(item)       
+                return { 'code': nfe.cStat.valor, 'message': nfe.xMotivo.valor ,
+                       'file_sent': result.envio.xml, 'file_returned': nome_arq,
+                       'nfe': nfe}
+            else:                       
+                return { 'code': nfe.cStat.valor, 'message': nfe.xMotivo.valor,
+                   'file_sent': result.envio.xml, 'file_returned': result.resposta.xml }
             
-            return list_nfe
         else:
             return { 'code': result.resposta.cStat.valor, 'message': result.resposta.xMotivo.valor,
                    'file_sent': result.envio.xml, 'file_returned': result.resposta.xml }

@@ -7,7 +7,7 @@
 			<field name="model">nfe.mde</field>
 			<field name="type">form</field>
 			<field name="arch" type="xml">
-				<form string="Manifestacao" version="7.0">
+				<form string="Manifestacao">
 					<header>
 						<button name="action_known_emission" string="Ciência da Emissão" type="object"/>
 						<button name="action_confirm_operation" string="Confirmar Operação" type="object"/>
@@ -16,19 +16,28 @@
 						<button name="action_download_xml" string="Download do XML" type="object"/>
 					</header>
 					<group>
-						<field name="chNFe" select="1"/>
-						<field name="nSeqEvento" />					
-						<field name="xNome" />
-						<field name="partner_id" />
-						<field name="dEmi" />
-						<field name="tpNF" />
-						<field name="vNF" />
-						<field name="cSitNFe" />
-						<field name="cSitConf"/>
-						<field name="formInclusao" />
-						<field name="dataInclusao" />
-						<field name="versao" />
+						<group>
+							<field name="chNFe" select="1"/>
+							<field name="nSeqEvento" />	
+							<field name="CNPJ" />
+							<field name="IE" />	
+							<field name="xNome" />
+							<field name="versao" />	
+							<field name="partner_id" />
+							<field name="dEmi" />
+						</group>
+						<group>
+							<field name="tpNF" />
+							<field name="vNF" />						
+							<field name="cSitNFe" />
+							<field name="cSitConf"/>						
+							<field name="formInclusao" />
+							<field name="dataInclusao" />
+						</group>										
 					</group>	
+					<group string="Documentos eletrônicos">
+						<field nolabel="1" name="document_event_ids" />
+					</group>
 				</form>
 			</field>
 		</record>
@@ -50,8 +59,9 @@
 			<field name="model">nfe.mde</field>
 			<field name="type">tree</field>
 			<field name="arch" type="xml">
-				<tree string="NFe Destinadas">
+				<tree string="NFe Destinadas" create="false">
 					<field name="nSeqEvento"/>
+					<field name="CNPJ"/>
 					<field name="xNome"/>
 					<field name="dEmi"/>
 					<field name="vNF"/>
@@ -69,6 +79,7 @@
 			<field name="context">{"search_default_situacao":1}</field>
 		</record>
 		
+		<menuitem name="Manifestação do Destinatário" id="menu_nfe_mde_localizacao" action="action_nfe_mde" parent="l10n_br_account.menu_l10n_br_account_fiscal" />
 		<menuitem name="Manifestação do Destinatário" id="menu_nfe_mde" action="action_nfe_mde" parent="account.menu_finance_payables" sequence="1"/>
 
 	</data>
