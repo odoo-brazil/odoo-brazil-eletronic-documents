@@ -19,7 +19,7 @@
 
 from datetime import datetime
 from openerp import models, api, fields
-from .service.nfe_download import download_nfe, known_emission
+from .service.nfe_download import download_nfe, send_event
 from openerp.addons.nfe.sped.nfe.validator.config_check import validate_nfe_configuration
 
 class L10n_brDocumentEvent(models.Model):
@@ -29,6 +29,7 @@ class L10n_brDocumentEvent(models.Model):
 
 class Nfe_Mde(models.Model):
     _name = 'nfe.mde'
+    _rec_name='nSeqEvento'
     
     company_id = fields.Many2one('res.company', string="Empresa")
     chNFe = fields.Char(string="Chave de Acesso", size=50, readonly=True)
@@ -41,7 +42,10 @@ class Nfe_Mde(models.Model):
     tpNF = fields.Integer(string="Tipo de Operação", readonly=True)
     vNF = fields.Float(string="Valor Total da NF-e", readonly=True, digits=(18,6))
     cSitNFe = fields.Integer(string="Situação da NF-e", readonly=True)
-    cSitConf = fields.Integer(string="Situação da Manifestação", readonly=True)
+    state = fields.Selection(string="Situação da Manifestação", readonly=True,
+                                selection=[('pending', 'Pendente'), ('ciente', 'Ciente da operação'), 
+                                ('confirmado', 'Confirmada operação'), ('desconhecido', 'Desconhecimento'), 
+                                ('nao_realizado', 'Não realizado')])
     formInclusao = fields.Char(string="Forma de Inclusão", readonly=True)
     dataInclusao = fields.Datetime(string="Data de Inclusão", readonly=True)
     versao = fields.Integer(string="Versão", readonly=True)
@@ -50,50 +54,83 @@ class Nfe_Mde(models.Model):
     document_event_ids = fields.One2many('l10n_br_account.document_event', 'mde_event_id', string="Documentos eletrônicos")
 
     @api.one
-    def action_search_nfe(self):
-        print "Acao ! action_search_nfe"
-        return True
-
-    @api.one
     def action_known_emission(self):
         validate_nfe_configuration(self.company_id)
-        nfe_result = known_emission(self.company_id, self.chNFe) 
+        nfe_result = send_event(self.company_id, self.chNFe, 'ciencia_operacao') 
         env_events = self.env['l10n_br_account.document_event']
         
-        if nfe_result['code'] == '135':
-            event = {'type':'9', 'response':'Ciência da operação', 
+        event = {'type':'9', 'response':'Ciência da operação', 
                 'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
                 'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
                 'write_date':datetime.now(), 'end_date':datetime.now(),
                 'state': 'done', 'origin': 'Ciência da Operação', 'mde_event_id': self.id }
-            env_events.create(event)
-            
+        
+        if nfe_result['code'] == '135':
+            self.state = 'ciente'            
         else:            
-            event = {'type':'9', 'response':'Ciência da operação sem êxito', 
-                'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
-                'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
-                'write_date':datetime.now(), 'end_date':datetime.now(),
-                'state': 'done', 'origin': 'Ciência da operação', 'mde_event_id': self.id }
+            event['response']='Ciência da operação sem êxito'
             
-            env_events.create(event) 
-                            
-        return True
-    
+        env_events.create(event)          
         return True
 
     @api.one
     def action_confirm_operation(self):
-        print "Acao ! action_confirm_operation"
+        validate_nfe_configuration(self.company_id)
+        nfe_result = send_event(self.company_id, self.chNFe, 'confirma_operacao') 
+        env_events = self.env['l10n_br_account.document_event']
+        
+        event = {'type':'9', 'response':'Confirmação da operação', 
+                'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
+                'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
+                'write_date':datetime.now(), 'end_date':datetime.now(),
+                'state': 'done', 'origin': 'Confirmação da Operação', 'mde_event_id': self.id }
+        
+        if nfe_result['code'] == '135':
+            self.state = 'confirmado'            
+        else:            
+            event['response']='Confirmação da operação sem êxito'
+            
+        env_events.create(event)          
         return True
     
     @api.one
     def action_unknown_operation(self):
-        print "Acao ! action_unknown_operation"
+        validate_nfe_configuration(self.company_id)
+        nfe_result = send_event(self.company_id, self.chNFe, 'desconhece_operacao') 
+        env_events = self.env['l10n_br_account.document_event']
+        
+        event = {'type':'9', 'response':'Desconhecimento da operação', 
+                'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
+                'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
+                'write_date':datetime.now(), 'end_date':datetime.now(),
+                'state': 'done', 'origin': 'Desconhecimento da operação', 'mde_event_id': self.id }
+        
+        if nfe_result['code'] == '135':
+            self.state = 'desconhecido'            
+        else:            
+            event['response']='Desconhecimento da operação sem êxito'
+            
+        env_events.create(event)          
         return True
 
     @api.one    
     def action_not_operation(self):
-        print "Acao ! action_not_operation"
+        validate_nfe_configuration(self.company_id)
+        nfe_result = send_event(self.company_id, self.chNFe, 'nao_realizar_operacao') 
+        env_events = self.env['l10n_br_account.document_event']
+        
+        event = {'type':'9', 'response':'Operação não realizada', 
+                'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
+                'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
+                'write_date':datetime.now(), 'end_date':datetime.now(),
+                'state': 'done', 'origin': 'Operação não realizada', 'mde_event_id': self.id }
+        
+        if nfe_result['code'] == '135':
+            self.state = 'nap_realizado'            
+        else:            
+            event['response']='Tentativa de Operação não realizada sem êxito'
+            
+        env_events.create(event)          
         return True
     
     @api.one

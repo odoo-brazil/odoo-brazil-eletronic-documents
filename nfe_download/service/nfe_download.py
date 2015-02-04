@@ -88,12 +88,26 @@ def distribuicao_nfe(company, ultimo_nsu):
         return { 'code': result.resposta.status, 'message': result.resposta.reason, 
                 'file_sent': result.envio.xml, 'file_returned': None }
     
-def known_emission(company, nfe_key):
+def send_event(company, nfe_key, method):
     p = __processo(company)
     cnpj_partner = re.sub('[^0-9]','', company.cnpj_cpf)
-    result = p.conhecer_operacao_evento(
-        cnpj=cnpj_partner, # CNPJ do destinatário/gerador do evento
-        chave_nfe=nfe_key )
+    result = {}
+    if method == 'ciencia_operacao':    
+        result = p.conhecer_operacao_evento(
+            cnpj=cnpj_partner, # CNPJ do destinatário/gerador do evento
+            chave_nfe=nfe_key )
+    elif method == 'confirma_operacao':
+        result = p.confirmar_operacao_evento(
+            cnpj=cnpj_partner, 
+            chave_nfe=nfe_key )
+    elif method == 'desconhece_operacao':
+        result = p.desconhecer_operacao_evento(
+            cnpj=cnpj_partner, 
+            chave_nfe=nfe_key )
+    elif method == 'nao_realizar_operacao':
+        result = p.nao_realizar_operacao_evento(
+            cnpj=cnpj_partner, 
+            chave_nfe=nfe_key )
     
     if result.resposta.status == 200: #Webservice ok
         if result.resposta.cStat.valor =='128': 

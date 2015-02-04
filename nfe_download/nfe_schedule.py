@@ -17,15 +17,11 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.        #
 ###############################################################################
 import logging
-import base64
-import gzip
-import cStringIO 
 from lxml import objectify
 from datetime import datetime
 from .service.nfe_download import distribuicao_nfe
 from openerp import models, api, fields
 from openerp.addons.nfe.sped.nfe.validator.config_check import validate_nfe_configuration
-from pysped.nfe.leiaute import RetDistDFeInt_100
 
 _logger = logging.getLogger(__name__)
 
@@ -61,7 +57,7 @@ class nfe_schedule(models.TransientModel):
                         
                         invoice_eletronic = { 'file_path': nfe['path'], 'chNFe': root.chNFe,
                                     'nSeqEvento': nfe['NSU'], 'xNome': root.xNome, 'tpNF': root.tpNF,
-                                    'vNF': root.vNF, 'cSitNFe': root.cSitNFe, 'cSitConf':'0',
+                                    'vNF': root.vNF, 'cSitNFe': root.cSitNFe, 'state':'pending',
                                     'dataInclusao':datetime.now(), 'CNPJ':root.CNPJ, 'IE': root.IE,
                                     'company_id': company.id, 'formInclusao': u'Verificação agendada'}
                         
@@ -81,18 +77,4 @@ class nfe_schedule(models.TransientModel):
 
     @api.one
     def execute_download(self):
-        #self.schedule_download()
-        arq = open('/home/danimar/projetos/exportacao/homologacao/dfe-resumo/2015-01/resumo_nfe-000000000000001.xml', 'r')
-        xml = arq.read()
-        arq.close()
-        
-        root = objectify.fromstring(xml)
-        
-        env_mde = self.env['nfe.mde']
-        
-        invoice_eletronic = { 'file_path': '/home/danimar/projetos/exportacao/homologacao/dfe-resumo/2015-01/resumo_nfe-000000000000001.xml', 'chNFe': root.chNFe,
-                    'nSeqEvento': '000000000000001', 'xNome': root.xNome, 'tpNF': root.tpNF,
-                    'vNF': root.vNF, 'cSitNFe': root.cSitNFe, 'cSitConf':'0',
-                    'dataInclusao':datetime.now(), 'CNPJ': root.CNPJ, 'IE':root.IE}
-        
-        env_mde.create(invoice_eletronic)  
+        self.schedule_download()
