@@ -72,12 +72,12 @@ def distribuicao_nfe(company, ultimo_nsu):
                 orig_file_cont = orig_file_desc.read()
                 orig_file_desc.close()                
                 
-                save_path = os.path.join(save_path, 'resumo_nfe-' +  doc.NSU.valor + '.xml')
-                arq = open(save_path, 'w')
+                path = os.path.join(save_path, 'resumo_nfe-' +  doc.NSU.valor + '.xml')
+                arq = open(path, 'w')
                 arq.write(orig_file_cont.encode('utf-8'))
                 arq.close()       
                 
-                nfe_list.append({ 'path':save_path, 'xml': orig_file_cont, 'NSU': doc.NSU.valor})                         
+                nfe_list.append({ 'path':path, 'xml': orig_file_cont, 'NSU': doc.NSU.valor})                         
             
             return { 'code': result.resposta.cStat.valor, 'message': result.resposta.xMotivo.valor,
                'list_nfe': nfe_list, 'file_returned': result.resposta.xml}

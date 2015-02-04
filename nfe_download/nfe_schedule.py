@@ -62,6 +62,7 @@ class nfe_schedule(models.TransientModel):
                                     'company_id': company.id, 'formInclusao': u'Verificação agendada'}
                         
                         env_mde.create(invoice_eletronic)           
+                        company.last_nsu_nfe = nfe['NSU']
                               
                 else:
                     
