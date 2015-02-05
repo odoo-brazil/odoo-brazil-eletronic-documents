@@ -37,7 +37,7 @@ def __processo(company):
     return p
 
 
-def _format_nse(nsu):
+def _format_nsu(nsu):
     nsu = long(nsu)
     return "%015d" % (nsu,)
 
@@ -56,7 +56,7 @@ def _create_dirs(company):
     return caminho
 
 def distribuicao_nfe(company, ultimo_nsu):
-    ultimo_nsu = _format_nse(ultimo_nsu)
+    ultimo_nsu = _format_nsu(ultimo_nsu)
     p = __processo(company)
     cnpj_partner = re.sub('[^0-9]','', company.cnpj_cpf)   
     result = p.consultar_distribuicao(cnpj_cpf=cnpj_partner, ultimo_nsu=ultimo_nsu, nsu='')
@@ -77,7 +77,8 @@ def distribuicao_nfe(company, ultimo_nsu):
                 arq.write(orig_file_cont.encode('utf-8'))
                 arq.close()       
                 
-                nfe_list.append({ 'path':path, 'xml': orig_file_cont, 'NSU': doc.NSU.valor})                         
+                nfe_list.append({ 'path':path, 'xml': orig_file_cont, 'NSU': doc.NSU.valor, 
+                                 'schema': doc.schema.valor })                         
             
             return { 'code': result.resposta.cStat.valor, 'message': result.resposta.xMotivo.valor,
                'list_nfe': nfe_list, 'file_returned': result.resposta.xml}

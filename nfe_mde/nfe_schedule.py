@@ -19,7 +19,7 @@
 import logging
 from lxml import objectify
 from datetime import datetime
-from .service.nfe_download import distribuicao_nfe
+from .service.mde import distribuicao_nfe
 from openerp import models, api, fields
 from openerp.addons.nfe.sped.nfe.validator.config_check import validate_nfe_configuration
 
@@ -52,18 +52,19 @@ class nfe_schedule(models.TransientModel):
                     env_events.create(event)  
                     env_mde = self.env['nfe.mde']
                         
-                    for nfe in nfe_result['list_nfe']:                        
-                        root = objectify.fromstring(nfe['xml'])
-                        
-                        invoice_eletronic = { 'file_path': nfe['path'], 'chNFe': root.chNFe,
-                                    'nSeqEvento': nfe['NSU'], 'xNome': root.xNome, 'tpNF': root.tpNF,
-                                    'vNF': root.vNF, 'cSitNFe': root.cSitNFe, 'state':'pending',
-                                    'dataInclusao':datetime.now(), 'CNPJ':root.CNPJ, 'IE': root.IE,
-                                    'company_id': company.id, 'formInclusao': u'Verificação agendada'}
-                        
-                        env_mde.create(invoice_eletronic)           
-                        company.last_nsu_nfe = nfe['NSU']
-                              
+                    for nfe in nfe_result['list_nfe']:          
+                        if nfe['schema'] == 'resNFe_v1.00.xsd':              
+                            root = objectify.fromstring(nfe['xml'])
+                            
+                            invoice_eletronic = { 'file_path': nfe['path'], 'chNFe': root.chNFe,
+                                        'nSeqEvento': nfe['NSU'], 'xNome': root.xNome, 'tpNF': root.tpNF,
+                                        'vNF': root.vNF, 'cSitNFe': root.cSitNFe, 'state':'pending',
+                                        'dataInclusao':datetime.now(), 'CNPJ':root.CNPJ, 'IE': root.IE,
+                                        'company_id': company.id, 'formInclusao': u'Verificação agendada'}
+                            
+                            env_mde.create(invoice_eletronic) 
+         
+                        company.last_nsu_nfe = nfe['NSU']                              
                 else:
                     
                     event = {'type':'12', 'response':'Consulta distribuição com problemas', 'company_id': company.id ,

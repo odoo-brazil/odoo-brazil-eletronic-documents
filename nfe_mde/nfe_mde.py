@@ -19,7 +19,7 @@
 
 from datetime import datetime
 from openerp import models, api, fields
-from .service.nfe_download import download_nfe, send_event
+from .service.mde import download_nfe, send_event
 from openerp.addons.nfe.sped.nfe.validator.config_check import validate_nfe_configuration
 
 class L10n_brDocumentEvent(models.Model):
@@ -59,7 +59,7 @@ class Nfe_Mde(models.Model):
         nfe_result = send_event(self.company_id, self.chNFe, 'ciencia_operacao') 
         env_events = self.env['l10n_br_account.document_event']
         
-        event = {'type':'9', 'response':'Ciência da operação', 
+        event = {'type':'13', 'response':'Ciência da operação', 
                 'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
                 'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
                 'write_date':datetime.now(), 'end_date':datetime.now(),
@@ -79,7 +79,7 @@ class Nfe_Mde(models.Model):
         nfe_result = send_event(self.company_id, self.chNFe, 'confirma_operacao') 
         env_events = self.env['l10n_br_account.document_event']
         
-        event = {'type':'9', 'response':'Confirmação da operação', 
+        event = {'type':'13', 'response':'Confirmação da operação', 
                 'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
                 'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
                 'write_date':datetime.now(), 'end_date':datetime.now(),
@@ -99,7 +99,7 @@ class Nfe_Mde(models.Model):
         nfe_result = send_event(self.company_id, self.chNFe, 'desconhece_operacao') 
         env_events = self.env['l10n_br_account.document_event']
         
-        event = {'type':'9', 'response':'Desconhecimento da operação', 
+        event = {'type':'13', 'response':'Desconhecimento da operação', 
                 'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
                 'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
                 'write_date':datetime.now(), 'end_date':datetime.now(),
@@ -119,7 +119,7 @@ class Nfe_Mde(models.Model):
         nfe_result = send_event(self.company_id, self.chNFe, 'nao_realizar_operacao') 
         env_events = self.env['l10n_br_account.document_event']
         
-        event = {'type':'9', 'response':'Operação não realizada', 
+        event = {'type':'13', 'response':'Operação não realizada', 
                 'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
                 'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
                 'write_date':datetime.now(), 'end_date':datetime.now(),
@@ -140,7 +140,7 @@ class Nfe_Mde(models.Model):
         env_events = self.env['l10n_br_account.document_event']
                 
         if nfe_result['code'] == '140':
-            event = {'type':'12', 'response':'Download NFe Concluido', 
+            event = {'type':'10', 'response':'Download NFe Concluido', 
                 'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
                 'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
                 'write_date':datetime.now(), 'end_date':datetime.now(),
@@ -148,7 +148,7 @@ class Nfe_Mde(models.Model):
             env_events.create(event)
             
         else:            
-            event = {'type':'12', 'response':'Download NFe não efetuado', 
+            event = {'type':'10', 'response':'Download NFe não efetuado', 
                 'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
                 'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
                 'write_date':datetime.now(), 'end_date':datetime.now(),

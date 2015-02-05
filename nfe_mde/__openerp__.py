@@ -18,15 +18,16 @@
 ###############################################################################
 
 {
-    'name': 'Download Nfe Sefaz',
+    'name': 'Manifesto Destinatário NFe',
     'version': '0.1',
     'category': 'NFE',
-    'description': """Implementa o download de xmls periodicamente do SEFAZ""",
+    'description': """Implementa a consulta de nfe periodicamente no SEFAZ""",
     'author': 'Danimar Ribeiro',
     'license': 'AGPL-3',
     'website': 'http://www.trustcode.com.br',
     'description': """
       Este módulo serve para efetuar download de notas em que são destinada a empresa.
+      Manifesta a ciencia ou desconhecimento da NF-e
       
       Dependencias: pysped, geraldo, pyxmlsec
       Instalando pyxmlsec 
