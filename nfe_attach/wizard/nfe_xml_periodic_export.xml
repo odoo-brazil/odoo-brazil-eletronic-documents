@@ -9,7 +9,8 @@
                     <field invisible="1" name="state"/>
                     <group>
                         <group states = "init">
-                            <field name="period_id"/>
+                            <field name="start_period_id"/>
+                            <field name="stop_period_id"/>
                         </group>
                         <group states = "done">
                             <field name="zip_file" colspan="4" filename="name"/>
