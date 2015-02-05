@@ -24,21 +24,21 @@ import os
 import base64
 import re
 import string
+from PIL import Image
+from StringIO import StringIO
+from pyPdf import PdfFileReader, PdfFileWriter
 
 from openerp import pooler
 from openerp.osv import orm
 from openerp.tools.translate import _
 
 from pysped.nfe import ProcessadorNFe
-
-from PIL import Image
-from StringIO import StringIO
+from pysped.nfe.danfe import DANFE
 
 def __processo(company):
     
     p = ProcessadorNFe()
     p.ambiente = int(company.nfe_environment)
-    #p.versao = company.nfe_version
     p.estado = company.partner_id.l10n_br_city_id.state_id.code
     p.certificado.stream_certificado = base64.decodestring(company.nfe_a1_file)
     p.certificado.senha = company.nfe_a1_password
@@ -113,3 +113,41 @@ def send_correction_letter(company, chave_nfe, numero_sequencia ,correcao):
     p = __processo(company)
     return p.corrigir_nota_evento( p.ambiente, chave_nfe, numero_sequencia, correcao)
 
+
+def print_danfe(inv):
+    str_pdf = ""
+    paths = []
+
+    if inv.nfe_version == '1.10':
+        from pysped.nfe.leiaute import ProcNFe_110
+        procnfe = ProcNFe_110()
+    elif inv.nfe_version == '2.00':
+        from pysped.nfe.leiaute import ProcNFe_200
+        procnfe = ProcNFe_200()
+    elif inv.nfe_version == '3.10':
+        from pysped.nfe.leiaute import ProcNFe_310
+        procnfe = ProcNFe_310()
+
+    file_xml = monta_caminho_nfe( inv.company_id, inv.nfe_access_key)
+    if inv.state not in ('open', 'paid', 'sefaz_cancelled'):
+        file_xml = os.path.join(file_xml, 'tmp/')
+    procnfe.xml = os.path.join(file_xml, inv.nfe_access_key + '-nfe.xml')
+    danfe = DANFE()
+    danfe.NFe = procnfe.NFe
+    danfe.protNFe = procnfe.protNFe
+    danfe.caminho = "/tmp/"
+    danfe.gerar_danfe()
+    paths.append(danfe.caminho + danfe.NFe.chave + '.pdf')
+
+    output = PdfFileWriter()
+    s = StringIO()
+
+    for path in paths:
+        pdf = PdfFileReader(file(path, "rb"))
+        for i in range(pdf.getNumPages()):
+            output.addPage(pdf.getPage(i))
+        output.write(s)
+
+    str_pdf = s.getvalue()
+    s.close()
+    return str_pdf
