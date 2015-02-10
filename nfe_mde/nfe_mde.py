@@ -65,7 +65,7 @@ class Nfe_Mde(models.Model):
                 'write_date':datetime.now(), 'end_date':datetime.now(),
                 'state': 'done', 'origin': 'Ciência da Operação', 'mde_event_id': self.id }
         
-        if nfe_result['code'] == '135':
+        if nfe_result['code'] == '135' or nfe_result['code'] == '573': #573 Evento já aconteceu
             self.state = 'ciente'            
         else:            
             event['response']='Ciência da operação sem êxito'
