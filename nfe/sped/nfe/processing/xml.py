@@ -117,3 +117,11 @@ def send_correction_letter(company, chave_nfe, numero_sequencia ,correcao):
     p = __processo(company)
     return p.corrigir_nota_evento( p.ambiente, chave_nfe, numero_sequencia, correcao)
 
+def print_danfe(company, nfe):
+    p = __processo(company)
+    danfe = p.danfe
+    danfe.NFe = nfe
+    #danfe.protNFe = procnfe.protNFe
+    danfe.caminho = "/tmp/"
+    danfe.gerar_danfe()
+    return danfe.caminho + danfe.NFe.chave + '.pdf'

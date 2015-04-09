@@ -27,7 +27,7 @@ from openerp.tools.translate import _
 from .sped.nfe.nfe_factory import NfeFactory
 from .sped.nfe.validator.xml import XMLValidator
 from openerp.report.pyPdf import PdfFileReader, PdfFileWriter
-from openerp.addons.nfe.sped.nfe.processing.xml import send, cancel
+from openerp.addons.nfe.sped.nfe.processing.xml import send, cancel, print_danfe
 from openerp.addons.nfe.sped.nfe.processing.xml import monta_caminho_nfe
 from openerp.addons.nfe.sped.nfe.validator.config_check import validate_nfe_configuration, validate_invoice_cancel
 
@@ -269,30 +269,22 @@ class AccountInvoice(orm.Model):
             company = self.pool.get('res.company').browse(
                 cr, uid, inv.company_id.id)
             nfe_key = inv.nfe_access_key
-            procnfe = pysped.nfe.manual_401.ProcNFe_200()
 
+            nfe_obj = self._get_nfe_factory(inv.nfe_version)
             try:
                 if inv.state in ['open', 'paid', 'sefaz_cancelled']:
                     file_xml = os.path.join(monta_caminho_nfe(
                         company, chave_nfe=nfe_key))
-
                 else:
                     file_xml = os.path.join(os.path.join(
                         monta_caminho_nfe(company, chave_nfe=nfe_key), 'tmp/'))
-
-                procnfe.xml = os.path.join(file_xml, nfe_key + '-nfe.xml')
+                nfe = nfe_obj.set_xml(os.path.join(file_xml, nfe_key +
+                                                 '-nfe.xml'))
             except:
                 raise orm.except_orm(('Error !'),
                                      ('Não é possível gerar a Danfe '
                                       '- Confirme o Documento'))
-
-            danfe = pysped.nfe.processador_nfe.DANFE()
-            danfe.NFe = procnfe.NFe
-            danfe.protNFe = procnfe.protNFe
-            danfe.caminho = "/tmp/"
-            danfe.gerar_danfe()
-            paths.append(danfe.caminho + danfe.NFe.chave + '.pdf')
-
+            paths.append(print_danfe(company, nfe))
         output = PdfFileWriter()
         s = StringIO()
 
@@ -324,7 +316,8 @@ class AccountInvoice(orm.Model):
 
             assert len(ids) == 1, 'This option should only be ' \
                                   'used for a single id at a time.'
-
+            # FIXME: Colocar o estado como sent, somente quando a nota
+            # estiver aberta.
             self.write(cr, uid, ids, {'sent': True}, context=context)
             datas = {
                 'ids': ids,
