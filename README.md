@@ -1,8 +1,9 @@
-NFE
+odoo-brazil-eletronic-documents
 ===
 
 Repositório com módulos para implementar todas as funcionalidades de NFe no OpenERP
 
+Versão 3.1
 
 Serviço | Status
 ------------ | -------------
@@ -18,4 +19,6 @@ Carta de Correção | Done
 MDF-E | Done
 Importação do XML de compra | In Progress
 NFC-E | In Progress
+CT-E | TODO
+
 
