@@ -195,11 +195,13 @@ class AccountInvoice(orm.Model):
 
         document_serie_id = inv.document_serie_id
         fiscal_document_id = inv.document_serie_id.fiscal_document_id
-        electronic = inv.document_serie_id.fiscal_document_id.electronic
+        if fiscal_document_id:
+            electronic = inv.document_serie_id.fiscal_document_id.electronic
         status = inv.nfe_status
+        protocolo = inv.nfe_protocol_number
 
         if ((document_serie_id and fiscal_document_id and not electronic) or
-                not status):
+                not (status and protocolo)):
             return super(AccountInvoice, self).action_cancel(cr, uid,
                                                        [inv.id], context)
         else:
