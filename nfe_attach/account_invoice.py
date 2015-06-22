@@ -133,7 +133,7 @@ class AccountInvoice(orm.Model):
                     'res_id': inv.id
                 }, context=context)
             except IOError:
-                key = 'erro'
+                pass
             else:
                 file_attc.close()
 
@@ -141,8 +141,8 @@ class AccountInvoice(orm.Model):
 
     def action_invoice_sent(self, cr, uid, ids, context=None):
 
-        assert len(
-            ids) == 1, 'This option should only be used for a single id at a time.'
+        assert len(ids) == 1, \
+            'This option should only be used for a single id at a time.'
         ir_model_data = self.pool.get('ir.model.data')
         attach_obj = self.pool.get('ir.attachment')
         attachment_ids = attach_obj.search(
