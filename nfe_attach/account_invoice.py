@@ -65,7 +65,7 @@ class AccountInvoiceInvalidNumber(orm.Model):
                 file_attc = open(arquivo, 'r')
                 attc = file_attc.read()
 
-                attachment_id = obj_attachment.create(cr, uid, {
+                obj_attachment.create(cr, uid, {
                     'name': str_aux.format(key),
                     'datas': base64.b64encode(attc),
                     'datas_fname': '.' + ext,
@@ -124,7 +124,7 @@ class AccountInvoice(orm.Model):
                 file_attc = open(save_dir, 'r')
                 attc = file_attc.read()
 
-                attachment_id = obj_attachment.create(cr, uid, {
+                obj_attachment.create(cr, uid, {
                     'name': str_aux.format(nfe_key),
                     'datas': base64.b64encode(attc),
                     'datas_fname': '.' + ext,
