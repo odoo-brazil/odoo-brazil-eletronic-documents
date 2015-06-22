@@ -26,10 +26,10 @@
     'license': 'AGPL-3',
     'website': 'http://www.trustcode.com.br',
     'description': """
-      Este módulo serve para efetuar download de notas em que são destinada 
+      Este módulo serve para efetuar download de notas em que são destinada
       a empresa.
       Manifesta a ciência ou desconhecimento da NF-e
-      
+
       Dependencias: pysped, geraldo, pyxmlsec
       Instalando pyxmlsec
         sudo pip install pyxmlsec
