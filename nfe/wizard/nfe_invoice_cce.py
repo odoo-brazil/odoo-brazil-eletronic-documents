@@ -20,7 +20,6 @@
 ###############################################################################
 
 from openerp.osv import fields, orm
-from openerp.tools.translate import _
 from ..sped.nfe.processing.xml import send_correction_letter
 
 
@@ -79,7 +78,8 @@ class NfeInvoiceCce(orm.TransientModel):
                     'response': '',
                     'company_id': company.id,
                     'origin': '[CC-E] ' + str(invoice.internal_number),
-                    'message': processo.resposta.retEvento[0].infEvento.xEvento.valor,
+                    'message': processo.resposta.retEvento[0].infEvento.
+                    xEvento.valor,
                     'state': 'done',
                     'document_event_ids': invoice.id}
                 results.append(vals)

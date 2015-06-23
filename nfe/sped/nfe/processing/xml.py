@@ -28,10 +28,6 @@ from PIL import Image
 from StringIO import StringIO
 from pyPdf import PdfFileReader, PdfFileWriter
 
-from openerp import pooler
-from openerp.osv import orm
-from openerp.tools.translate import _
-
 from pysped.nfe import ProcessadorNFe
 from pysped.nfe.danfe import DANFE
 
