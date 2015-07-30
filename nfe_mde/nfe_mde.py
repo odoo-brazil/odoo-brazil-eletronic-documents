@@ -119,12 +119,13 @@ class Nfe_Mde(models.Model):
         nfe_result = send_event(self.company_id, self.chNFe, 'nao_realizar_operacao') 
         env_events = self.env['l10n_br_account.document_event']
         
-        event = {'type':'13', 'response':'Operação não realizada', 
-                'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'], 
-                'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
-                'write_date':datetime.now(), 'end_date':datetime.now(),
-                'state': 'done', 'origin': 'Operação não realizada', 'mde_event_id': self.id }
-        
+        event = {
+            'type':'13', 'response':'Operação não realizada',
+            'company_id': self.company_id.id , 'file_returned': nfe_result['file_returned'],
+            'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(),
+            'write_date':datetime.now(), 'end_date':datetime.now(),
+            'state': 'done', 'origin': 'Operação não realizada', 'mde_event_id': self.id
+        }
         if nfe_result['code'] == '135':
             self.state = 'nap_realizado'            
         else:            
@@ -153,8 +154,5 @@ class Nfe_Mde(models.Model):
                 'status':nfe_result['code'] ,'message': nfe_result['message'], 'create_date':datetime.now(), 
                 'write_date':datetime.now(), 'end_date':datetime.now(),
                 'state': 'done', 'origin': 'Download NFe', 'mde_event_id': self.id }
-            
-            env_events.create(event) 
-            
-                
+            env_events.create(event)
         return True
