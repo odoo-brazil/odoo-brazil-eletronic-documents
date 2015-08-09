@@ -25,7 +25,7 @@
     'version': '0.1',
     'category': 'Account addons',
     'license': 'AGPL-3',
-    'author': 'KMEE',
+    'author': 'KMEE, TrustCode',
     'website': 'http://www.kmee.com.br',
     'external_dependencies': {
         'python': ['pysped'],
@@ -35,7 +35,9 @@
     ],
     'data': [
         'view/l10n_br_account_invoice_import.xml',
+        'view/nfe_import_view.xml'
     ],
+    'css': ['static/src/css/nfe_import.css'],
     'active': False,
     "installable": True,
     "auto_install": False,

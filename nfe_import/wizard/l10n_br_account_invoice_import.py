@@ -1,9 +1,10 @@
-# coding: utf-8
+# coding=utf-8
 # ###########################################################################
 #
 #    Author: Luis Felipe Mileo
 #            Fernando Marcato Rodrigues
 #            Daniel Sadamo Hirayama
+#            Danimar Ribeiro <danimaribeiro@gmail.com>
 #    Copyright 2015 KMEE - www.kmee.com.br
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -21,72 +22,142 @@
 #
 ##############################################################################
 
-from openerp.osv import orm, fields
+import logging
+import cPickle
+from openerp import models, fields, api
 from openerp.tools.translate import _
 from openerp.addons.nfe.sped.nfe.nfe_factory import NfeFactory
+from openerp.exceptions import Warning
+
 import os
 
 
-class NfeImportAccountInvoiceImport(orm.TransientModel):
+_logger = logging.getLogger(__name__)
+
+
+class NfeImportAccountInvoiceImport(models.TransientModel):
     """
         Assistente de importaçao de txt e xml
     """
     _name = 'nfe_import.account_invoice_import'
     _description = 'Import Eletronic Document in TXT and XML format'
 
-    _columns = {
-        'edoc_input': fields.binary(u'Arquivo do documento eletrônico',
-                                   help=u'Somente arquivos no formato TXT e '
-                                        u'XML'),
-        'file_name': fields.char('File Name', size=128),
-        'state': fields.selection([('init', 'init'),
-                                   ('done', 'done')], 'state', readonly=True),
-    }
-
-    _defaults = {
-        'state': 'init',
-    }
+    edoc_input = fields.Binary(u'Arquivo do documento eletrônico',
+                               help=u'Somente arquivos no formato TXT e XML')
+    file_name = fields.Char('File Name', size=128)
+    create_partner = fields.Boolean(
+        u'Criar fornecedor automaticamente?', default=True,
+        help=u'Cria o fornecedor automaticamente caso não esteja cadastrado')
+    state = fields.Selection([('init', 'init'), ('done', 'done')],
+                             string='state', readonly=True, default='init')
+    fiscal_category_id = fields.Many2one(
+        'l10n_br_account.fiscal.category', 'Categoria Fiscal')
+    fiscal_position = fields.Many2one(
+        'account.fiscal.position', 'Posição Fiscal',
+        domain="[('fiscal_category_id','=',fiscal_category_id)]")
 
     def _check_extension(self, filename):
         (__, ftype) = os.path.splitext(filename)
         if ftype.lower() not in ('.txt', '.xml'):
-            raise Exception(_('Please use a file in extensions TXT or XML'))
+            raise Warning(_('Please use a file in extensions TXT or XML'))
         return ftype
-
 
     def _get_nfe_factory(self, nfe_version):
         return NfeFactory().get_nfe(nfe_version)
 
-    def import_edoc(self, cr, uid, req_id, context=False):
-        """
-        :param cr:
-        :param uid:
-        :param ids:
-        :param context:
-        :return:
-        """
-        context = context or {}
+    @api.multi
+    def import_edoc(self, req_id, context=False):
+        try:
+            self.ensure_one()
+            importer = self[0]
 
-        if isinstance(req_id, list):
-            req_id = req_id[0]
+            ftype = self._check_extension(importer.file_name)
 
-        importer = self.browse(cr, uid, req_id, context)
-        ftype = self._check_extension(importer.file_name)
+            edoc_obj = self._get_nfe_factory(
+                self.env.user.company_id.nfe_version)
 
-        user = self.pool.get('res.users').browse(cr, uid, uid, context=context)
-        edoc_obj = self._get_nfe_factory(user.company_id.nfe_version)
+            # TODO: Tratar mais de um documento por vez.
+            eDoc = edoc_obj.import_edoc(
+                self._cr, self._uid, importer.edoc_input, ftype, context)[0]
 
-        # TODO: Tratar mais de um documento por vez.
-        edoc = edoc_obj.import_edoc(cr, uid, importer.edoc_input,
-                                            ftype, context)[0]
+            inv_values = eDoc['values']
+            if importer.create_partner and inv_values['partner_id'] == False:
+                partner = self.env['res.partner'].create(
+                    inv_values['partner_values'])
+                inv_values['partner_id'] = partner.id
+                inv_values['account_id'] = partner.property_account_payable.id
+            elif inv_values['partner_id'] == False:
+                raise Exception(
+                    u'Fornecedor não cadastrado, o xml não será importado\n'
+                    u'Marque a opção "Criar fornecedor" se deseja importar '
+                    u'mesmo assim')
 
-        model_obj = self.pool.get('ir.model.data')
-        action_obj = self.pool.get('ir.actions.act_window')
-        action_id = model_obj.get_object_reference(
-            cr, uid, edoc['action'][0], edoc['action'][1])[1]
-        res = action_obj.read(cr, uid, action_id)
-        res['domain'] = res['domain'][:-1] + ",('id', 'in', %s)]" % [edoc['id']]
-        return res
+            inv_values['fiscal_category_id'] = importer.fiscal_category_id.id
+            inv_values['fiscal_position'] = importer.fiscal_position.id
 
+            product_import_ids = []
+
+            for inv_line in inv_values['invoice_line']:
+                inv_line[2][
+                    'fiscal_category_id'] = importer.fiscal_category_id.id
+                inv_line[2]['fiscal_position'] = importer.fiscal_position.id
+                inv_line[2]['cfop_id'] = importer.fiscal_position.cfop_id.id
+
+                product_import_ids.append(
+                    (0, 0,
+                     {'product_id': inv_line[2]['product_id'],
+                      'uom_id': inv_line[2]['uos_id'],
+                      'code_product_xml': inv_line[2]['product_code_xml'],
+                      'uom_xml': inv_line[2]['uom_xml'],
+                      'product_xml': inv_line[2]['product_name_xml'],
+                      'cfop_id': inv_line[2]['cfop_id'],
+                      'cfop_xml': inv_line[2]['cfop_xml'],
+                      'quantity_xml': inv_line[2]['quantity'],
+                      'unit_amount_xml': inv_line[2]['price_unit'],
+                      'discount_total_xml': inv_line[2]['discount_value'],
+                      'total_amount_xml': inv_line[2]['price_gross']
+                      }))
+
+            values = {'supplier_id': inv_values['partner_id'],
+                      'fiscal_category_id': importer.fiscal_category_id.id,
+                      'fiscal_position': importer.fiscal_position.id,
+                      'number': inv_values['internal_number'],
+                      'natureza_operacao': inv_values['nat_op'],
+                      'amount_total': inv_values['amount_total'],
+                      'xml_data': cPickle.dumps(inv_values),
+                      'product_import_ids': product_import_ids,
+                      'edoc_input': importer.edoc_input,
+                      'file_name': importer.file_name}
+
+            import_edit = self.env['nfe.import.edit'].create(values)
+
+            model_obj = self.pool.get('ir.model.data')
+            action_obj = self.pool.get('ir.actions.act_window')
+            action_id = model_obj.get_object_reference(
+                self._cr, self._uid, 'nfe_import', 'action_nfe_import_edit_form')[1]
+            res = action_obj.read(self._cr, self._uid, action_id)
+            res['res_id'] = import_edit.id
+            return res
+        except Exception as e:
+            if isinstance(e.message, unicode):
+                _logger.error(e.message, exc_info=True)
+                raise Warning(
+                    u'Erro ao tentar importar o xml\n'
+                    u'Mensagem de erro:\n{0}'.format(
+                        e.message))
+            elif isinstance(e.message, str):
+                _logger.error(
+                    e.message.decode(
+                        'utf-8',
+                        'ignore'),
+                    exc_info=True)
+            else:
+                _logger.error(str(e), exc_info=True)
+            raise Warning(
+                u'Erro ao tentar importar o xml\n'
+                u'Mensagem de erro:\n{0}'.format(
+                    e.message.encode('utf-8', 'ignore')))
+
+    @api.multi
     def done(self, cr, uid, ids, context=False):
         return True
