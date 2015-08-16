@@ -208,7 +208,6 @@ class Nfe_Mde(models.Model):
                 'end_date': datetime.now(), 'state': 'done',
                 'origin': 'Download NFe', 'mde_event_id': self.id
             }
-
             env_events.create(event)
 
         return True
