@@ -70,13 +70,7 @@ class L10n_brAccountInvoiceInvalidNumber(orm.Model):
                 self.write(cr, uid, ids, values, context=context)
                 # context['caminho'] = processo.arquivos[0]['arquivo']
                 self.attach_file_event(
-                    cr,
-                    uid,
-                    ids,
-                    None,
-                    'inu',
-                    'xml',
-                    context)
+                    cr, uid, ids, None, 'inu', 'xml', context)
             else:
                 values['state'] = 'not_authorized'
                 values['status'] = processo.resposta.infInut.cStat.valor
@@ -108,11 +102,10 @@ class L10n_brAccountInvoiceInvalidNumber(orm.Model):
                     'company_id': company.id,
                     'origin': '[INU] {0} - {1}'.format(str(item.number_start),
                                                        str(item.number_end)),
-                    #    'file_sent': processo.arquivos[0]['arquivo'],
-                    #    'file_returned': processo.arquivos[1]['arquivo'],
                     'message': processo.resposta.infInut.xMotivo.valor,
                     'state': 'done',
-                    'document_event_ids': item.id}
+                    # 'document_event_ids': item.id} TODO: Fix me!
+                }
                 results.append(vals)
 
             except Exception as e:
@@ -128,7 +121,7 @@ class L10n_brAccountInvoiceInvalidNumber(orm.Model):
                     'file_returned': 'False',
                     'message': 'Erro desconhecido ' + e.message,
                     'state': 'done',
-                    'document_event_ids': item.id
+                    # 'document_event_ids': item.id TODO: Fix me!
                 }
                 results.append(vals)
             finally:

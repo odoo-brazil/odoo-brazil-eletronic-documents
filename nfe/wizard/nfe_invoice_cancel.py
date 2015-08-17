@@ -46,9 +46,8 @@ class NfeInvoiceCancel(osv.osv_memory):
         if context is None:
             context = {}
 
-        justificativa = self.browse(cr, uid, ids)[0].justificativa
-
-        obj_invoice = self.pool.get('account.invoice')
-        obj_invoice.cancel_invoice_online(cr, uid, data['ids'], justificativa)
-
+        for cancel in self.browse(cr, uid, ids):
+            obj_invoice = self.pool.get('account.invoice')
+            obj_invoice.cancel_invoice_online(cr, uid, data['ids'],
+                                              cancel.justificativa)
         return {'type': 'ir.actions.act_window_close'}

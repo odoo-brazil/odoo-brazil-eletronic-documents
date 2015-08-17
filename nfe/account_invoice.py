@@ -69,8 +69,7 @@ class AccountInvoice(orm.Model):
 
             # nfe_obj = NFe310()
             nfes = nfe_obj.get_xml(
-                cr, uid, ids, int(
-                    company.nfe_environment), context)
+                cr, uid, ids, int(company.nfe_environment), context)
 
             for nfe in nfes:
                 # erro = nfe_obj.validation(nfe['nfe'])
@@ -201,26 +200,40 @@ class AccountInvoice(orm.Model):
                         event_obj.create(cr, uid, result, context)
 
                 self.write(cr, uid, inv.id, {
-                    'nfe_status': protNFe["status_code"] + ' - ' +
-                    protNFe["message"],
+                    'nfe_status': protNFe["status_code"] + ' - '
+                    + protNFe["message"],
                     'nfe_date': datetime.datetime.now(),
                     'state': protNFe["state"],
                     'nfe_protocol_number': protNFe["nfe_protocol_number"],
                 }, context)
         return True
 
+    def button_cancel(self, cr, uid, ids, context=None):
+        assert len(ids) == 1, ('This option should only be used for a single '
+                               'id at a time.')
+        if context is None:
+            context = {}
+        inv = self.browse(cr, uid, ids[0], context=context)
+
+        document_serie_id = inv.document_serie_id
+        fiscal_document_id = inv.document_serie_id.fiscal_document_id
+        electronic = inv.document_serie_id.fiscal_document_id.electronic
+        status = inv.nfe_status
+
+        if ((document_serie_id and fiscal_document_id and not electronic) or
+                not status):
+            return super(AccountInvoice, self).action_cancel(cr, uid,
+                                                             [inv.id], context)
+        else:
+            res = self.pool.get('ir.actions.act_window').for_xml_id(
+                cr, uid, 'nfe',
+                'action_nfe_invoice_cancel_form', context)
+            return res
+
     def cancel_invoice_online(self, cr, uid, ids, justificative, context=None):
+        event_obj = self.pool.get('l10n_br_account.document_event')
 
         for inv in self.browse(cr, uid, ids, context):
-
-            document_serie_id = inv.document_serie_id
-            fiscal_document_id = inv.document_serie_id.fiscal_document_id
-            electronic = inv.document_serie_id.fiscal_document_id.electronic
-
-            if (document_serie_id and fiscal_document_id and not electronic):
-                return False
-
-            event_obj = self.pool.get('l10n_br_account.document_event')
             if inv.state in ('open', 'paid'):
                 company_pool = self.pool.get('res.company')
                 company = company_pool.browse(cr, uid, inv.company_id.id)
@@ -248,19 +261,20 @@ class AccountInvoice(orm.Model):
                     self.attach_file_event(
                         cr, uid, [
                             inv.id], None, 'can', 'xml', context)
+
                     for prot in processo.resposta.retEvento:
                         vals["status"] = prot.infEvento.cStat.valor
                         vals["message"] = prot.infEvento.xEvento.valor
-                        if vals["status"] in ('101',  # Cancelamento de NF-e
-                                              # homologado
-                                              '128',
-                                              # Loto do evento processado
-                                              '135',  # Evento registrado e
-                                              # vinculado a NFC-e
-                                              '151',  # Cancelamento de NF-e
-                                              # homologado fora de prazo
-                                              '155'):  # Cancelamento
-                                              # homologado fora de prazo
+                        if vals["status"] in (
+                                '101',  # Cancelamento de NF-e
+                                # homologado
+                                '128',
+                                # Loto do evento processado
+                                '135',  # Evento registrado e
+                                # vinculado a NFC-e
+                                '151',  # Cancelamento de NF-e
+                                # homologado fora de prazo
+                                '155'):  # Cancelamento homologado fora prazo
                             result = super(
                                 AccountInvoice, self).action_cancel(
                                 cr, uid, [inv.id], context)
