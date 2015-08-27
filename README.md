@@ -1,6 +1,6 @@
 odoo-brazil-eletronic-documents
 ===
-[![Build Status](https://travis-ci.org/odoo-brazil/odoo-brazil-eletronic-documents.svg)](https://travis-ci.org/odoo-brazil/odoo-brazil-eletronic-documents)
+[![Build Status](https://travis-ci.org/odoo-brazil/odoo-brazil-eletronic-documents.svg?branch=8.0)](https://travis-ci.org/odoo-brazil/odoo-brazil-eletronic-documents)
 [![Coverage Status](https://coveralls.io/repos/odoo-brazil/odoo-brazil-eletronic-documents/badge.svg?branch=8.0&service=github)](https://coveralls.io/github/odoo-brazil/odoo-brazil-eletronic-documents?branch=8.0)
 [![Code Climate](https://codeclimate.com/github/odoo-brazil/odoo-brazil-eletronic-documents/badges/gpa.svg)](https://codeclimate.com/github/odoo-brazil/odoo-brazil-eletronic-documents)
 
