@@ -38,6 +38,7 @@
 							<field name="state"/>						
 							<field name="formInclusao" />
 							<field name="dataInclusao" />
+							<field name="file_path" />
 						</group>										
 					</group>	
 					<group string="Documentos eletrônicos">
@@ -82,7 +83,7 @@
 		</record>
 		
 		<record model="ir.actions.act_window" id="action_nfe_mde">
-			<field name="name">Manifestacao</field>
+			<field name="name">Manifestação</field>
 			<field name="res_model">nfe.mde</field>
 			<field name="view_type">form</field>
 			<field name="view_mode">tree,form</field>

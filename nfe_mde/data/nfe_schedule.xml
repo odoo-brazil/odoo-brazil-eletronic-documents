@@ -5,14 +5,14 @@
 
         <record id="ir_cron_download_nfe_scheduler0" model="ir.cron">
             <field eval="&quot;&quot;&quot;schedule_download&quot;&quot;&quot;" name="function"/>
-            <field name="interval_number">1</field>
+            <field name="interval_number">2</field>
             <field name="interval_type">hours</field>
             <field name="user_id" ref="base.user_root"/>
             <field eval="&quot;&quot;&quot;Agendamento NFe Download&quot;&quot;&quot;" name="name"/>
             <field eval="-1" name="numbercall"/>
             <field eval="5" name="priority"/>
             <field eval="0" name="doall"/>
-            <field eval="1" name="active"/>
+            <field eval="0" name="active"/>
             <field eval="&quot;&quot;&quot;nfe.schedule&quot;&quot;&quot;" name="model"/>
         </record>
 
@@ -46,10 +46,7 @@
 			<field name="view_id" ref="form_nfe_schedule_download_nfe"/>
             <field name="target">new</field>
 		</record>
-		
-      <!--  <menuitem id="menu_action_nfe_schedule_download_nfe" name="Processamento Periodico" 
-        	parent="l10n_br_account.menu_l10n_br_account" sequence="1" />
-        -->	
+	
 		
 		<menuitem id="menu_l10n_br_accouunt_periodic_processing_nfe_export" name="Verificar NFe para download" 
 				parent="nfe_attach.menu_l10n_br_account_processamento_periodico" action="action_nfe_schedule_download_nfe"/>
