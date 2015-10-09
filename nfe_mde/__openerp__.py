@@ -19,7 +19,7 @@
 
 {
     'name': 'Manifesto Destinatário NFe',
-    'version': '0.1',
+    'version': '8.0.1.0.0',
     'category': 'NFE',
     'description': """Implementa a consulta de nfe periodicamente no SEFAZ""",
     'author': 'Danimar Ribeiro',
