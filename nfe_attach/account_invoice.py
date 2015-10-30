@@ -190,7 +190,8 @@ class AccountInvoice(orm.Model):
 class email_template(osv.Model):
     _inherit = 'email.template'
 
-    def generate_email_batch(self, cr, uid, template_id, res_id, context=None, fields=None):
+    def generate_email_batch(self, cr, uid, template_id, res_id,
+                             context=None, fields=None):
         context = context or {}
         values = super(
             email_template,
