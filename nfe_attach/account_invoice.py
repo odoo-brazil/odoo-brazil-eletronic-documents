@@ -68,7 +68,7 @@ class AccountInvoiceInvalidNumber(orm.Model):
                 obj_attachment.create(cr, uid, {
                     'name': str_aux.format(key),
                     'datas': base64.b64encode(attc),
-                    'datas_fname': '.' + ext,
+                    'datas_fname': str_aux.format(key),
                     'description': '' or _('No Description'),
                     'res_model': 'l10n_br_account.invoice.invalid.number',
                     'res_id': obj.id
@@ -127,7 +127,7 @@ class AccountInvoice(orm.Model):
                 obj_attachment.create(cr, uid, {
                     'name': str_aux.format(nfe_key),
                     'datas': base64.b64encode(attc),
-                    'datas_fname': '.' + ext,
+                    'datas_fname': str_aux.format(nfe_key),
                     'description': '' or _('No Description'),
                     'res_model': 'account.invoice',
                     'res_id': inv.id
@@ -190,18 +190,21 @@ class AccountInvoice(orm.Model):
 class email_template(osv.Model):
     _inherit = 'email.template'
 
-    def generate_email(self, cr, uid, template_id, res_id, context=None):
+    def generate_email_batch(self, cr, uid, template_id, res_id,
+                             context=None, fields=None):
         context = context or {}
         values = super(
             email_template,
-            self).generate_email(
+            self).generate_email_batch(
             cr,
             uid,
             template_id,
             res_id,
-            context)
+            context,
+            fields,
+        )
         if context.get('default_model') == 'account.invoice':
-            values['attachment_ids'] = context.get('attachment_ids')
+            values[res_id[0]]['attachment_ids'] = context.get('attachment_ids')
         return values
 
 
