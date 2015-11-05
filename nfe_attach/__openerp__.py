@@ -19,7 +19,7 @@
 
 {
     'name': 'NFE XML',
-    'version': '0.1',
+    'version': '8.0.1.0.0',
     'category': 'Generic Modules',
     'description': """Salva o danfe e xml em anexo a fatura e permite o
         envio dos documentos anexados para o email do cliente""",
