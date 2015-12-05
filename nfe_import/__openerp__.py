@@ -3,6 +3,7 @@
 #
 #    Copyright (C) 2015 KMEE (http://www.kmee.com.br)
 #    @author Luis Felipe Miléo <mileo@kmee.com.br>
+#             Danimar Ribeiro <danimaribeiro@gmail.com>
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -22,11 +23,11 @@
 
 {
     'name': 'Importação de Documento Fiscal Eletronico',
-    'version': '0.1',
+    'version': '8.0.1.0.0',
     'category': 'Account addons',
     'license': 'AGPL-3',
-    'author': 'KMEE, TrustCode',
-    'website': 'http://www.kmee.com.br',
+    'author': 'Trustcode, KMEE',
+    'website': 'http://github.com/odoo-brazil',
     'external_dependencies': {
         'python': ['pysped'],
     },
@@ -34,8 +35,10 @@
         'nfe',
     ],
     'data': [
-        'view/l10n_br_account_invoice_import.xml',
-        'view/nfe_import_view.xml'
+        'wizard/l10n_br_account_invoice_import.xml',
+        'views/account_fiscal_position_view.xml',
+        'views/account_invoice_view.xml',
+        'views/nfe_import_view.xml',
     ],
     'css': ['static/src/css/nfe_import.css'],
     'active': False,

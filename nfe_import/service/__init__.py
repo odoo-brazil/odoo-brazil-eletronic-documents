@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 ###############################################################################
 #                                                                             #
 # Copyright (C) 2015 Trustcode - www.trustcode.com.br                         #
@@ -20,5 +20,4 @@
 ###############################################################################
 
 
-from . import account_fiscal_position
-from . import nfe_import_edit
+from . import nfe_serializer
