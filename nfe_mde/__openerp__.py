@@ -44,6 +44,7 @@
         'nfe_attach',
     ],
     'data': [
+        'security/ir.model.access.csv',
         'data/nfe_schedule.xml',
         'views/nfe_mde_view.xml'
     ],
