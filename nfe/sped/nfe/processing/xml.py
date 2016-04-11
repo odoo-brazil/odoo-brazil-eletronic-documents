@@ -21,27 +21,25 @@
 
 
 import os
-import base64
 import re
 import string
 from PIL import Image
 from StringIO import StringIO
 from pyPdf import PdfFileReader, PdfFileWriter
-
-from pysped.nfe import ProcessadorNFe
+from .certificado import Certificado
+from .processor import ProcessadorNFe
 from pysped.nfe.danfe import DANFE
 
 
 def __processo(company):
 
-    p = ProcessadorNFe()
+    p = ProcessadorNFe(company)
     p.ambiente = int(company.nfe_environment)
     p.estado = company.partner_id.l10n_br_city_id.state_id.code
-    p.certificado.stream_certificado = base64.decodestring(company.nfe_a1_file)
-    p.certificado.senha = company.nfe_a1_password
+    p.certificado = Certificado(company)
     p.salvar_arquivos = True
     p.contingencia_SCAN = False
-    p.caminho = company.nfe_export_folder
+    p.caminho = company.nfe_root_folder
     return p
 
 
@@ -170,7 +168,7 @@ def print_danfe(inv):
 def add_backgound_to_logo_image(company):
     logo = company.logo
     logo_image = Image.open(StringIO(logo.decode('base64')))
-    image_path = os.path.join(company.nfe_export_folder, 'company_logo.png')
+    image_path = os.path.join(company.nfe_root_folder, 'company_logo.png')
 
     bg = Image.new("RGB", logo_image.size, (255, 255, 255))
     bg.paste(logo_image, logo_image)

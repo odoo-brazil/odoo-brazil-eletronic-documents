@@ -21,11 +21,11 @@
     'name': 'Manifesto Destinatário NFe',
     'version': '8.0.1.0.0',
     'category': 'NFE',
-    'description': """Implementa a consulta de nfe periodicamente no SEFAZ""",
     'author': 'Danimar Ribeiro',
     'license': 'AGPL-3',
     'website': 'http://www.trustcode.com.br',
     'description': """
+        Implementa a consulta de nfe periodicamente no SEFAZ
       Este módulo serve para efetuar download de notas em que são destinada
       a empresa.
       Manifesta a ciência ou desconhecimento da NF-e
@@ -44,6 +44,7 @@
         'nfe_attach',
     ],
     'data': [
+        'security/ir.model.access.csv',
         'data/nfe_schedule.xml',
         'views/nfe_mde_view.xml'
     ],
