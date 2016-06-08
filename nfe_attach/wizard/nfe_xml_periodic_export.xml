@@ -11,6 +11,7 @@
                         <group states = "init">
                             <field name="start_period_id"/>
                             <field name="stop_period_id"/>
+                            <field name="export_type"/>
                         </group>
                         <group states = "done">
                             <field name="zip_file" colspan="4" filename="name"/>
