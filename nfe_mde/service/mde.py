@@ -88,7 +88,7 @@ def distribuicao_nfe(company, ultimo_nsu):
                     doc.NSU.valor +
                     '.xml')
                 arq = open(path, 'w')
-                arq.write(orig_file_cont.encode('utf-8'))
+                arq.write(orig_file_cont)
                 arq.close()
 
                 nfe_list.append({
@@ -176,6 +176,7 @@ def download_nfe(company, list_nfe):
             if nfe.cStat.valor == '140':
 
                 nome_arq = os.path.join(import_folder, 'download_nfe/')
+                os.makedirs(nome_arq)
                 nome_arq = nome_arq + nfe.chNFe.valor + 'download-nfe.xml'
                 arq = open(nome_arq, 'w')
                 arq.write(nfe.procNFe.valor.encode('utf-8'))
