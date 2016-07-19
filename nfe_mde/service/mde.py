@@ -176,7 +176,8 @@ def download_nfe(company, list_nfe):
             if nfe.cStat.valor == '140':
 
                 nome_arq = os.path.join(import_folder, 'download_nfe/')
-                os.makedirs(nome_arq)
+                if not os.path.exists(nome_arq):
+                    os.makedirs(nome_arq)
                 nome_arq = nome_arq + nfe.chNFe.valor + 'download-nfe.xml'
                 arq = open(nome_arq, 'w')
                 arq.write(nfe.procNFe.valor.encode('utf-8'))
