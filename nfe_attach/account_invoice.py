@@ -130,7 +130,8 @@ class AccountInvoice(orm.Model):
                     'datas_fname': str_aux.format(nfe_key),
                     'description': '' or _('No Description'),
                     'res_model': 'account.invoice',
-                    'res_id': inv.id
+                    'res_id': inv.id,
+                    'type': 'binary',
                 }, context=context)
             except IOError:
                 pass
