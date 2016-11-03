@@ -27,8 +27,11 @@ from PIL import Image
 from StringIO import StringIO
 from pyPdf import PdfFileReader, PdfFileWriter
 from .certificado import Certificado
+from pysped.nfe.leiaute import ProcEventoCCe_100
 from .processor import ProcessadorNFe
 from pysped.nfe.danfe import DANFE
+from pysped.nfe.danfe import DAEDE
+
 
 from openerp.addons.nfe.tools.misc import mount_path_nfe
 
@@ -155,6 +158,24 @@ def print_danfe(invoices):
         danfe.caminho = "/tmp/"
         danfe.gerar_danfe()
         paths.append(danfe.caminho + danfe.NFe.chave + '.pdf')
+
+        if inv.cce_document_event_ids:
+            daede = DAEDE()
+            daede.logo = add_backgound_to_logo_image(inv.company_id)
+            daede.NFe = procnfe.NFe
+            daede.protNFe = procnfe.protNFe
+            for item, event in enumerate(inv.cce_document_event_ids):
+                proc_evento = ProcEventoCCe_100()
+                doc_item = str(item + 1).zfill(2)
+                proc_evento.xml = os.path.join(
+                    file_xml,
+                    inv.nfe_access_key + '-' +
+                    doc_item + '-cce.xml')
+                daede.procEventos.append(proc_evento)
+
+            daede.caminho = "/tmp/"
+            daede.gerar_daede()
+            paths.append(daede.caminho + 'eventos-' + daede.NFe.chave + '.pdf')
 
     output = PdfFileWriter()
     s = StringIO()
