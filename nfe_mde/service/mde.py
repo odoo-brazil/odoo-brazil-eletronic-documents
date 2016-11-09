@@ -21,8 +21,15 @@ import os
 import base64
 import gzip
 import cStringIO
-from pysped.nfe import ProcessadorNFe
 from datetime import datetime
+
+import logging
+_logger = logging.getLogger(__name__)
+
+try:
+    from pysped.nfe import ProcessadorNFe
+except ImportError as exc:
+    logging.exception(exc.message)
 
 
 def __processo(company):
