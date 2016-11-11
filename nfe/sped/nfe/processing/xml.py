@@ -29,7 +29,6 @@ from pyPdf import PdfFileReader, PdfFileWriter
 from .certificado import Certificado
 from pysped.nfe.leiaute import ProcEventoCCe_100
 from .processor import ProcessadorNFe
-from pysped.nfe.danfe import DANFE
 from pysped.nfe.danfe import DAEDE
 
 from openerp.addons.nfe.tools.misc import mount_path_nfe
