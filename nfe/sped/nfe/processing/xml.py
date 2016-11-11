@@ -27,10 +27,7 @@ from PIL import Image
 from StringIO import StringIO
 from pyPdf import PdfFileReader, PdfFileWriter
 from .certificado import Certificado
-from pysped.nfe.leiaute import ProcEventoCCe_100
 from .processor import ProcessadorNFe
-from pysped.nfe.danfe import DANFE
-from pysped.nfe.danfe import DAEDE
 
 from openerp.addons.nfe.tools.misc import mount_path_nfe
 
@@ -38,7 +35,9 @@ import logging
 _logger = logging.getLogger(__name__)
 
 try:
+    from pysped.nfe.leiaute import ProcEventoCCe_100
     from pysped.nfe.danfe import DANFE
+    from pysped.nfe.danfe import DAEDE
 except ImportError as exc:
     logging.exception(exc.message)
 
