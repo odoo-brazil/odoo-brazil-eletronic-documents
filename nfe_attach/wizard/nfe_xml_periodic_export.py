@@ -146,12 +146,12 @@ class NfeXmlPeriodicExport(orm.TransientModel):
                         caminho_arquivos = caminho_arquivos.replace('\n', ' ')
 
                         if export_type == 'nfe' and comando_nfe:
-                            result = os.system("zip -r " + \
+                            result = os.system("zip -r " +
                                                os.path.join(export_dir,
                                                             bkp_name) +
                                                ' ' + caminho_arquivos)
                         else:
-                            result = os.system("zip -r " + \
+                            result = os.system("zip -r " +
                                                os.path.join(export_dir,
                                                             bkp_name) +
                                                ' ' + caminho_arquivos)

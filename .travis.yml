@@ -1,9 +1,9 @@
 language: python
 
 python:
-  - "2.7_with_system_site_packages"
+  - "2.7"
 
-sudo: required
+cache: pip
 
 addons:
   apt:
@@ -16,8 +16,11 @@ addons:
 
 env:
   - VERSION="8.0" LINT_CHECK="1"
+  - VERSION="8.0" ODOO_REPO="odoo/odoo" LINT_CHECK="0"
   - VERSION="8.0" ODOO_REPO="OCA/OCB" LINT_CHECK="0"
 
+virtualenv:
+  - system_site_packages: true
 
 install:
   - git clone https://github.com/OCA/maintainer-quality-tools.git ${HOME}/maintainer-quality-tools
@@ -32,10 +35,10 @@ install:
   - travis_install_nightly
 
 before_script:
-  - sudo chmod +x configure_locale.sh
+  - chmod +x configure_locale.sh
 
 script:
-  - ./configure_locale.sh
+  - sudo ./configure_locale.sh
   - travis_run_tests
 
 after_success:
