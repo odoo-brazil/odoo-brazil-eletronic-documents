@@ -11,6 +11,7 @@
                         <group states = "init">
                             <field name="start_period_id"/>
                             <field name="stop_period_id"/>
+                            <field name="export_type"/>
                         </group>
                         <group states = "done">
                             <field name="zip_file" colspan="4" filename="name"/>
@@ -34,7 +35,7 @@
 			<field name="view_id" ref="l10n_br_account_periodic_processing_nfe_export_form"/>
             <field name="target">new</field>
 		</record>
-        <menuitem id="menu_l10n_br_account_processamento_periodico" name="Processamento Periodico" parent="l10n_br_account.menu_l10n_br_account" sequence="1"/>
+        <menuitem id="menu_l10n_br_account_processamento_periodico" name="Processamento Periodico" parent="l10n_br_account.menu_l10n_br_account" sequence="99"/>
    		<menuitem id="menu_l10n_br_accouunt_periodic_processing_nfe_export" name="Exportar NFs por periodo" parent="menu_l10n_br_account_processamento_periodico" action="action_l10n_br_account_periodic_processing_nfe_export"/>
 	</data>
 </openerp>
