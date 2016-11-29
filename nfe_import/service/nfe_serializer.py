@@ -21,17 +21,21 @@
 #                                                                             #
 ###############################################################################
 
-import re
 import base64
-import string
-import pysped
+import re
 import tempfile
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
 from openerp.tools.translate import _
+from openerp.exceptions import Warning as UserError
 
-from pysped.nfe.leiaute.consrecinfe_310 import ProtNFe
+try:
+    from pysped.nfe.leiaute.consrecinfe_310 import ProtNFe
+except ImportError:
+    raise UserError(
+        _(u'Erro!'),
+        _(u"Biblioteca PySPED não instalada!"))
 
 
 class NFeSerializer(object):
@@ -82,7 +86,7 @@ class NFeSerializer(object):
 
         adittional = self._get_additional_information()
         weight_data = self._get_weight_data()
-        protocol = self._get_protocol()
+        # protocol = self._get_protocol()
         total = self._get_total()
 
         invoice_vals.update(carrier_data)
@@ -270,9 +274,9 @@ class NFeSerializer(object):
 
             city_id = self.env['l10n_br_base.city'].search(
                 [('ibge_code', '=',
-                    str(self.nfe.infNFe.emit.enderEmit.cMun.valor)[2:]),
+                  str(self.nfe.infNFe.emit.enderEmit.cMun.valor)[2:]),
                  ('state_id.ibge_code', '=',
-                    str(self.nfe.infNFe.emit.enderEmit.cMun.valor)[0:2])])
+                  str(self.nfe.infNFe.emit.enderEmit.cMun.valor)[0:2])])
 
             if len(city_id) > 0:
                 partner['l10n_br_city_id'] = city_id[0].id
@@ -328,9 +332,9 @@ class NFeSerializer(object):
                  ('product_code', '=', self.det.prod.cProd.valor)])
             if len(supplierinfo_ids) > 0:
                 supplier_info = supplierinfo_ids[0]
-                inv_line['product_id'] = supplier_info.product_tmpl_id\
+                inv_line['product_id'] = supplier_info.product_tmpl_id \
                     .product_variant_ids[0].id
-                inv_line['name'] = supplier_info.product_tmpl_id\
+                inv_line['name'] = supplier_info.product_tmpl_id \
                     .product_variant_ids[0].name
             else:
                 inv_line['product_id'] = False
@@ -545,7 +549,8 @@ class NFeSerializer(object):
         res = {}
         cnpj_cpf = ''
 
-        res['freight_responsibility'] = str(self.nfe.infNFe.transp.modFrete.valor)
+        res['freight_responsibility'] = str(
+            self.nfe.infNFe.transp.modFrete.valor)
         # Realizamos a importacao da transportadora
         if self.nfe.infNFe.transp.transporta.CNPJ.valor:
             cnpj_cpf = self.nfe.infNFe.transp.transporta.CNPJ.valor
@@ -593,7 +598,7 @@ class NFeSerializer(object):
                 'kind_of_packages': self.nfe.infNFe.transp.vol[0].esp.valor,
                 'brand_of_packages': self.nfe.infNFe.transp.vol[0].marca.valor,
                 'notation_of_packages':
-                self.nfe.infNFe.transp.vol[0].nVol.valor,
+                    self.nfe.infNFe.transp.vol[0].nVol.valor,
                 'weight': self.nfe.infNFe.transp.vol[0].pesoL.valor,
                 'weight_net': self.nfe.infNFe.transp.vol[0].pesoB.valor
             }
@@ -647,7 +652,7 @@ class NFeSerializer(object):
         try:
             from pysped.nfe.leiaute import NFe_310
         except ImportError:
-            raise orm.except_orm(
+            raise UserError(
                 _(u'Erro!'),
                 _(u"Biblioteca PySPED não instalada!"))
 
@@ -658,7 +663,7 @@ class NFeSerializer(object):
         try:
             from pysped.nfe.leiaute import NFRef_310
         except ImportError:
-            raise orm.except_orm(
+            raise UserError(
                 _(u'Erro!'),
                 _(u"Biblioteca PySPED não instalada!"))
 
@@ -669,7 +674,7 @@ class NFeSerializer(object):
         try:
             from pysped.nfe.leiaute import Det_310
         except ImportError:
-            raise orm.except_orm(
+            raise UserError(
                 _(u'Erro!'),
                 _(u"Biblioteca PySPED não instalada!"))
 
@@ -679,7 +684,7 @@ class NFeSerializer(object):
         try:
             from pysped.nfe.leiaute import DI_310
         except ImportError:
-            raise orm.except_orm(
+            raise UserError(
                 _(u'Erro!'),
                 _(u"Biblioteca PySPED não instalada!"))
         return DI_310()
@@ -688,7 +693,7 @@ class NFeSerializer(object):
         try:
             from pysped.nfe.leiaute import Adi_310
         except ImportError:
-            raise orm.except_orm(
+            raise UserError(
                 _(u'Erro!'),
                 _(u"Biblioteca PySPED não instalada!"))
         return Adi_310()
@@ -697,7 +702,7 @@ class NFeSerializer(object):
         try:
             from pysped.nfe.leiaute import Vol_310
         except ImportError:
-            raise orm.except_orm(
+            raise UserError(
                 _(u'Erro!'),
                 _(u"Biblioteca PySPED não instalada!"))
         return Vol_310()
@@ -707,7 +712,7 @@ class NFeSerializer(object):
         try:
             from pysped.nfe.leiaute import Dup_310
         except ImportError:
-            raise orm.except_orm(
+            raise UserError(
                 _(u'Erro!'),
                 _(u"Biblioteca PySPED não instalada!"))
 
@@ -755,4 +760,4 @@ class NFeSerializer(object):
             zip = re.sub('[^0-9]', '', zip)
             if len(zip) == 8:
                 zip = "%s-%s" % (zip[0:4], zip[4:7])
-        return cnpj_cpf
+        return zip

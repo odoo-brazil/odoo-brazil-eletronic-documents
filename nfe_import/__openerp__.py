@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    Copyright (C) 2015 KMEE (http://www.kmee.com.br)
@@ -26,10 +26,12 @@
     'version': '8.0.1.0.0',
     'category': 'Account addons',
     'license': 'AGPL-3',
-    'author': 'Trustcode, KMEE',
-    'website': 'http://github.com/odoo-brazil',
+    'author': 'Trustcode, KMEE, Odoo Community Association (OCA)',
+    'website': 'http://www.odoobrasil.org.br',
     'external_dependencies': {
-        'python': ['pysped'],
+        'python': [
+            'pysped'
+        ],
     },
     'depends': [
         'nfe',
@@ -40,8 +42,9 @@
         'views/account_invoice_view.xml',
         'views/nfe_import_view.xml',
     ],
-    'css': ['static/src/css/nfe_import.css'],
-    'active': False,
+    'css': [
+        'static/src/css/nfe_import.css'
+    ],
     "installable": True,
     "auto_install": False,
 }
