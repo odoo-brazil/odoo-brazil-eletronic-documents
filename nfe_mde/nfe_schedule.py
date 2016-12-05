@@ -52,13 +52,21 @@ class NfeSchedule(models.TransientModel):
         return cnpj
 
     @api.model
-    def schedule_download(self, raise_error=False):
-        companies = self.env['res.company'].search([])
+    def schedule_download(self, raise_error=False, domain=()):
+        nfe_mdes = []
+        companies = self.env['res.company'].search(domain)
         for company in companies:
             try:
                 validate_nfe_configuration(company)
                 nfe_result = distribuicao_nfe(company, company.last_nsu_nfe)
-
+            except Exception:
+                _logger.error("Erro ao consultar Manifesto", exc_info=True)
+                if raise_error:
+                    raise UserError(
+                        u'Atenção',
+                        u'Não foi possivel efetuar a consulta!\n '
+                        u'Verifique o log')
+            else:
                 env_events = self.env['l10n_br_account.document_event']
 
                 if nfe_result['code'] == '137' or nfe_result['code'] == '138':
@@ -127,6 +135,7 @@ class NfeSchedule(models.TransientModel):
                                 })
 
                         company.last_nsu_nfe = nfe['NSU']
+                        nfe_mdes.append(nfe)
                 else:
 
                     event = {
@@ -144,8 +153,9 @@ class NfeSchedule(models.TransientModel):
                     }
 
                     obj = env_events.create(event)
-                    self.env['ir.attachment'].create(
-                        {
+
+                    if nfe_result['file_returned']:
+                        self.env['ir.attachment'].create({
                             'name': u"Consulta manifesto - {0}".format(
                                 company.cnpj_cpf),
                             'datas': base64.b64encode(
@@ -157,13 +167,7 @@ class NfeSchedule(models.TransientModel):
                             'res_id': obj.id
                         })
 
-            except Exception:
-                _logger.error("Erro ao consultar Manifesto", exc_info=True)
-                if raise_error:
-                    raise UserError(
-                        u'Atenção',
-                        u'Não foi possivel efetuar a consulta!\n '
-                        u'Verifique o log')
+        return nfe_mdes
 
     @api.multi
     def execute_download(self):
