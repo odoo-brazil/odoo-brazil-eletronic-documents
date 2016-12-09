@@ -18,6 +18,7 @@
 ###############################################################################
 import base64
 import logging
+import re
 from datetime import datetime
 from lxml import objectify
 
@@ -34,6 +35,15 @@ class ResCompany(models.Model):
     _inherit = 'res.company'
 
     last_nsu_nfe = fields.Char(string="Último NSU usado", size=20, default='0')
+
+    @staticmethod
+    def _mask_cnpj(cnpj):
+        if cnpj:
+            val = re.sub('[^0-9]', '', cnpj)
+            if len(val) == 14:
+                cnpj = "%s.%s.%s/%s-%s" % (val[0:2], val[2:5], val[5:8],
+                                           val[8:12], val[12:14])
+        return cnpj
 
     @api.multi
     def query_nfe_batch(self, raise_error=False):
