@@ -80,15 +80,15 @@ class NfeImportAccountInvoiceImport(models.TransientModel):
 
     def _validate_against_invoice(self, invoice_values, invoice):
         if len(invoice_values['invoice_line']) != len(invoice.invoice_line):
-            raise Exception(
+            raise UserError(
                 u'O xml não possui o mesmo número de itens da fatura')
         if "cnpj_cpf" in invoice_values:
             if invoice_values["cnpj_cpf"] != invoice.partner_id.cnpj_cpf:
-                raise Exception(
+                raise UserError(
                     u'O CNPJ não corresponde ao fornecedor da fatura')
         else:
             if invoice_values["partner_id"] != invoice.partner_id.id:
-                raise Exception(
+                raise UserError(
                     u'O CNPJ não corresponde ao fornecedor da fatura')
 
     @api.multi
@@ -114,7 +114,7 @@ class NfeImportAccountInvoiceImport(models.TransientModel):
                 inv_values['partner_id'] = partner.id
                 inv_values['account_id'] = partner.property_account_payable.id
             elif not inv_values['partner_id']:
-                raise Exception(
+                raise UserError(
                     u'Fornecedor não cadastrado, o xml não será importado\n'
                     u'Marque a opção "Criar fornecedor" se deseja importar '
                     u'mesmo assim')
