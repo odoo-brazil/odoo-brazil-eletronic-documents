@@ -54,55 +54,49 @@ class AccountFiscalPosition(models.Model):
         self.ensure_one()
         values['cfop_id'] = self.cfop_id.id
         for tax_mapping in self.tax_ids:
-            if tax_mapping.cfop_src_id and tax_mapping.tax_src_id and \
-                    tax_mapping.tax_code_src_id:
-                if (tax_mapping.tax_code_src_id.id ==
-                        values['icms_cst_id'] and
-                        tax_mapping.cfop_src_id.code == str(
-                        values['cfop_xml']) and
-                        tax_mapping.tax_src_id.id in [j[1] for j in values[
-                        'invoice_line_tax_id']]):
-                    self._apply_mapping(tax_mapping, values)
-                    continue
+            cfop_src_id_match = (
+                tax_mapping.cfop_src_id and
+                tax_mapping.cfop_src_id.code == str(values['cfop_xml'])
+            )
+            tax_src_id_match = (
+                tax_mapping.tax_src_id and
+                tax_mapping.tax_src_id.id in {
+                    j[1] for j in values['invoice_line_tax_id']
+                }
+            )
+            tax_code_src_id_match = (
+                tax_mapping.tax_code_src_id.id and
+                tax_mapping.tax_code_src_id.id == values['icms_cst_id']
+            )
 
-            if tax_mapping.cfop_src_id and tax_mapping.tax_src_id:
+            if cfop_src_id_match and tax_src_id_match and tax_code_src_id_match:
+                self._apply_mapping(tax_mapping, values)
+                continue
 
-                if (tax_mapping.cfop_src_id.code ==
-                        str(values['cfop_xml']) and
-                        tax_mapping.tax_src_id.id in [j[1] for j in values[
-                        'invoice_line_tax_id']]):
-                    self._apply_mapping(tax_mapping, values)
-                    continue
+            if cfop_src_id_match and tax_src_id_match:
+                self._apply_mapping(tax_mapping, values)
+                continue
 
-            if tax_mapping.cfop_src_id and tax_mapping.tax_code_src_id:
+            if cfop_src_id_match and tax_code_src_id_match:
+                self._apply_mapping(tax_mapping, values)
+                continue
 
-                if (tax_mapping.cfop_src_id.code == str(values['cfop_xml']) and
-                        tax_mapping.tax_code_src_id.id ==
-                        values['icms_cst_id']):
-                    self._apply_mapping(tax_mapping, values)
-                    continue
+            if tax_src_id_match and tax_code_src_id_match:
+                self._apply_mapping(tax_mapping, values)
+                continue
 
-            if tax_mapping.tax_src_id and tax_mapping.tax_code_src_id:
-                if (tax_mapping.tax_code_src_id.id == values['icms_cst_id'] and
-                        tax_mapping.tax_src_id.id in [j[1] for j in values[
-                        'invoice_line_tax_id']]):
-                    self._apply_mapping(tax_mapping, values)
-                    continue
+            if tax_code_src_id_match:
+                # A CST de Origem bate então tenta setar CFOP e CST de
+                # destino se existir
+                self._apply_mapping(tax_mapping, values)
+                continue
 
-            if tax_mapping.tax_code_src_id:
-                if tax_mapping.tax_code_src_id.id == values['icms_cst_id']:
-                    # A CST de Origem bate então tenta setar CFOP e CST de
-                    # destino se existir
-                    self._apply_mapping(tax_mapping, values)
-                    continue
+            if cfop_src_id_match:
+                # A CFOP de origem bate então tenta setar CFOP e CST de
+                # destino se existir
+                self._apply_mapping(tax_mapping, values)
 
-            if tax_mapping.cfop_src_id:
-                if tax_mapping.cfop_src_id.code == str(values['cfop_xml']):
-                    # A CFOP de origem bate então tenta setar CFOP e CST de
-                    # destino se existir
-                    self._apply_mapping(tax_mapping, values)
-
-        return (0, 0, values)
+        return values
 
 
 class AccountFiscalPositionTax(models.Model):
