@@ -20,8 +20,12 @@
 ###############################################################################
 
 
-from openerp import api, fields, models
+from openerp import api, fields, models, _
+from openerp.exceptions import Warning as UserError, except_orm
 
+TOO_MANY_FISCAL_POSITIONS_MSG = _(u'''
+Fiscal Category {fc.name} ({fc!r}) has multiple Fiscal Positions ({fp!r}) mapping to CFOP {cfop.code} ({cfop!r}).
+'''.strip())
 
 class AccountFiscalPosition(models.Model):
     _inherit = 'account.fiscal.position'
@@ -37,6 +41,7 @@ class AccountFiscalPosition(models.Model):
                 'icms_cst_id'] = tax_mapping.tax_code_dest_id.id
         if tax_mapping.cfop_dest_id:
             inv_line['cfop_id'] = tax_mapping.cfop_dest_id.id
+            self._update_fiscal_position(inv_line, tax_mapping.cfop_dest_id)
         if tax_mapping.tax_dest_id:
             line_tax = []
             for tax_line in inv_line['invoice_line_tax_id']:
@@ -47,6 +52,23 @@ class AccountFiscalPosition(models.Model):
                     line_tax.append((4, tax_mapping.tax_dest_id.id, 0))
 
             inv_line['invoice_line_tax_id'] = line_tax
+
+    def _update_fiscal_position(self, inv_line, cfop):
+        fiscal_category = self.env['l10n_br_account.fiscal.category'].browse(
+            inv_line['fiscal_category_id']
+        )
+        fiscal_position_ids = fiscal_category.fiscal_position_ids.filtered(
+            lambda fp: fp.cfop_id == cfop
+        )
+        try:
+            inv_line['fiscal_position'] = (
+                fiscal_position_ids.ensure_one() if fiscal_position_ids
+                else self
+            ).id
+        except except_orm:
+            raise UserError(TOO_MANY_FISCAL_POSITIONS_MSG.format(
+                fc=fiscal_category, fp=fiscal_position_ids, cfop=cfop,
+            ))
 
     @api.multi
     def fiscal_position_map(self, inv_line):
