@@ -97,7 +97,7 @@ class AccountFiscalPosition(models.Model):
                     continue
 
             if tax_mapping.cfop_src_id:
-                if tax_mapping.cfop_src_id.id == values['cfop_xml']:
+                if tax_mapping.cfop_src_id.code == str(values['cfop_xml']):
                     # A CFOP de origem bate então tenta setar CFOP e CST de
                     # destino se existir
                     self._apply_mapping(tax_mapping, values)
