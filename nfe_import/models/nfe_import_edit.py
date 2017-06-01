@@ -126,9 +126,8 @@ class NfeImportEdit(models.TransientModel):
         self.ensure_one()
         inv_values = cPickle.loads(self.xml_data.encode('ascii', 'ignore'))
 
-        index = 0
-        for item in self.product_import_ids:
-            line = inv_values['invoice_line'][index]
+        for index, item in enumerate(self.product_import_ids):
+            line = inv_values['invoice_line'][index][2]
 
             if not item.product_id:
                 if self.create_product:
@@ -137,9 +136,9 @@ class NfeImportEdit(models.TransientModel):
                     item.product_id = product_created
                     item.uom_id = product_created.uom_id
 
-                    line[2]['product_id'] = product_created.id
-                    line[2]['uos_id'] = product_created.uom_id.id
-                    line[2]['account_id'] = (
+                    line['product_id'] = product_created.id
+                    line['uos_id'] = product_created.uom_id.id
+                    line['account_id'] = (
                         product_created.property_account_income.id or
                         product_created.categ_id.
                         property_account_income_categ.id)
@@ -152,12 +151,12 @@ class NfeImportEdit(models.TransientModel):
                     })
 
             else:
-                line[2]['product_id'] = item.product_id.id
-                line[2]['account_id'] = (
+                line['product_id'] = item.product_id.id
+                line['account_id'] = (
                     item.product_id.property_account_income.id or
                     item.product_id.categ_id.property_account_income_categ.id)
-                line[2]['uos_id'] = item.uom_id.id
-                line[2]['cfop_id'] = item.cfop_id.id
+                line['uos_id'] = item.uom_id.id
+                line['cfop_id'] = item.cfop_id.id
 
                 total_recs = self.env['product.supplierinfo'].search_count(
                     [('name', '=', self.supplier_id.id),
@@ -171,10 +170,9 @@ class NfeImportEdit(models.TransientModel):
                         'product_tmpl_id': item.product_id.product_tmpl_id.id
                     })
 
-            inv_values['invoice_line'][
-                index] = self.fiscal_position.fiscal_position_map(line[2])
-
-            index += 1
+            inv_values['invoice_line'][index][2].update(
+                self.fiscal_position.fiscal_position_map(line)
+            )
 
         self._validate()
 
@@ -268,30 +266,30 @@ class NfeImportEdit(models.TransientModel):
     @api.multi
     def product_create(
             self, inv_values, line, item_grid, default_category=None):
-        if not line[2]['fiscal_classification_id']:
+        if not line['fiscal_classification_id']:
             fc_env = self.env['account.product.fiscal.classification']
-            ncm = fc_env.search([('name', '=', line[2]['ncm_xml'])], limit=1)
+            ncm = fc_env.search([('name', '=', line['ncm_xml'])], limit=1)
             if not ncm:
                 ncm = fc_env.create({
-                    'name': line[2]['ncm_xml'],
+                    'name': line['ncm_xml'],
                     'company_id': inv_values['company_id'],
                     'type': 'normal'
                 })
-            line[2]['fiscal_classification_id'] = ncm.id
+            line['fiscal_classification_id'] = ncm.id
 
         vals = {
-            'name': line[2]['product_name_xml'],
+            'name': line['product_name_xml'],
             'type': 'product',
             'fiscal_type': 'product',
-            'ncm_id': line[2]['fiscal_classification_id'],
-            'default_code': line[2]['product_code_xml'],
+            'ncm_id': line['fiscal_classification_id'],
+            'default_code': line['product_code_xml'],
         }
 
         if default_category:
             vals['categ_id'] = default_category.id
 
-        if check_ean(line[2]['ean_xml']):
-            vals['ean13'] = line[2]['ean_xml']
+        if check_ean(line['ean_xml']):
+            vals['ean13'] = line['ean_xml']
 
         if item_grid.uom_id:
             vals['uom_id'] = item_grid.uom_id.id
