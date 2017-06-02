@@ -23,9 +23,11 @@
 from openerp import api, fields, models, _
 from openerp.exceptions import Warning as UserError, except_orm
 
-TOO_MANY_FISCAL_POSITIONS_MSG = _(u'''
-Fiscal Category {fc.name} ({fc!r}) has multiple Fiscal Positions ({fp!r}) mapping to CFOP {cfop.code} ({cfop!r}).
-'''.strip())
+TOO_MANY_FISCAL_POSITIONS_MSG = _(
+    u'''Fiscal Category {fc.name} ({fc!r}) has multiple Fiscal Positions
+    ({fp!r}) mapping to CFOP {cfop.code} ({cfop!r}).'''.strip()
+)
+
 
 class AccountFiscalPosition(models.Model):
     _inherit = 'account.fiscal.position'
@@ -91,7 +93,8 @@ class AccountFiscalPosition(models.Model):
                 tax_mapping.tax_code_src_id.id == values['icms_cst_id']
             )
 
-            if cfop_src_id_match and tax_src_id_match and tax_code_src_id_match:
+            if cfop_src_id_match and tax_src_id_match \
+                    and tax_code_src_id_match:
                 self._apply_mapping(tax_mapping, values)
                 continue
 
