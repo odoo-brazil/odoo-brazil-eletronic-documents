@@ -205,7 +205,7 @@ class NfeMde(models.Model):
     def action_download_xml(self):
         for record in self:
             validate_nfe_configuration(record.company_id)
-            nfe_result = download_nfe(record.company_id, [record.chNFe])
+            nfe_result = download_nfe(record.company_id, record.chNFe)
             env_events = record.env['l10n_br_account.document_event']
             if nfe_result['code'] == '138':
                 event = record._create_event(
