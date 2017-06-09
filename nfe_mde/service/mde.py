@@ -52,9 +52,7 @@ def distribuicao_nfe(company, ultimo_nsu):
     cnpj_partner = re.sub('[^0-9]', '', company.cnpj_cpf)
     result = p.consultar_distribuicao(
         cnpj_cpf=cnpj_partner,
-        ultimo_nsu=ultimo_nsu,
-        # nsu=''
-    )
+        ultimo_nsu=ultimo_nsu)
 
     if result.resposta.status == 200:  # Webservice ok
         if (result.resposta.cStat.valor == '137' or
@@ -138,7 +136,7 @@ def download_nfe(company, list_nfe):
 
     result = p.consultar_distribuicao(
         cnpj_cpf=cnpj_partner,
-        chave_nfe=list_nfe[0])
+        chave_nfe=list_nfe)
 
     if result.resposta.status == 200:  # Webservice ok
         if result.resposta.cStat.valor == '138':

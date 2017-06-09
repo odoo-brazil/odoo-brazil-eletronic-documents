@@ -53,8 +53,8 @@ class ResCompany(models.Model):
                 validate_nfe_configuration(company)
                 last_nsu = self.env['nfe.mde'].search(
                     [], order='nSeqEvento desc', limit=1).nSeqEvento
-                nfe_result = distribuicao_nfe(company,
-                                              last_nsu or company.last_nsu_nfe)
+                nfe_result = distribuicao_nfe(
+                    company, min(last_nsu, company.last_nsu_nfe))
             except Exception:
                 _logger.error("Erro ao consultar Manifesto", exc_info=True)
                 if raise_error:
@@ -95,7 +95,10 @@ class ResCompany(models.Model):
                     env_mde = self.env['nfe.mde']
 
                     for nfe in nfe_result['list_nfe']:
-                        if nfe['schema'] == u'procNFe_v3.10.xsd':
+                        exists_nsu = self.env['nfe.mde'].search(
+                                    [('nSeqEvento', '=', nfe['NSU'])]).id
+                        if nfe['schema'] == u'procNFe_v3.10.xsd' and \
+                                not exists_nsu:
                             root = objectify.fromstring(nfe['xml'])
                             cnpj_forn = self._mask_cnpj(
                                 ('%014d' % root.NFe.infNFe.emit.CNPJ))
