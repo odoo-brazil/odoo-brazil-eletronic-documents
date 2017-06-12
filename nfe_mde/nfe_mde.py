@@ -107,7 +107,9 @@ class NfeMde(models.Model):
             'status': nfe_result['code'], 'message': nfe_result['message'],
             'create_date': datetime.now(), 'write_date': datetime.now(),
             'end_date': datetime.now(), 'state': 'done',
-            'origin': response, 'mde_event_id': self.id
+            'origin': response, 'mde_event_id': self.id,
+            'file_sent': nfe_result.get('file_sent', False),
+            'file_returned': nfe_result.get('file_returned', False),
         }
 
     def _create_attachment(self, event, result):
@@ -203,9 +205,9 @@ class NfeMde(models.Model):
     def action_download_xml(self):
         for record in self:
             validate_nfe_configuration(record.company_id)
-            nfe_result = download_nfe(record.company_id, [record.chNFe])
+            nfe_result = download_nfe(record.company_id, record.chNFe)
             env_events = record.env['l10n_br_account.document_event']
-            if nfe_result['code'] == '140':
+            if nfe_result['code'] == '138':
                 event = record._create_event(
                     'Download NFe concluido', nfe_result, type_event='10')
                 env_events.create(event)
@@ -213,7 +215,7 @@ class NfeMde(models.Model):
                 record.env['ir.attachment'].create(
                     {
                         'name': file_name,
-                        'datas': base64.b64encode(nfe_result['file_returned']),
+                        'datas': base64.b64encode(nfe_result['nfe']),
                         'datas_fname': file_name,
                         'description':
                             u'XML NFe - Download manifesto do destinatário',
