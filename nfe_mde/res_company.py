@@ -93,7 +93,6 @@ class ResCompany(models.Model):
                         })
 
                     env_mde = self.env['nfe.mde']
-
                     for nfe in nfe_result['list_nfe']:
                         exists_nsu = self.env['nfe.mde'].search(
                                     [('nSeqEvento', '=', nfe['NSU'])]).id
@@ -137,6 +136,49 @@ class ResCompany(models.Model):
                                     'res_model': 'nfe.mde',
                                     'res_id': obj_nfe.id
                                 })
+                        elif nfe['schema'] == 'resNFe_v1.01.xsd' and \
+                                not exists_nsu:
+                            root = objectify.fromstring(nfe['xml'])
+                            exists_chnfe = self.env['nfe.mde'].search(
+                            [('chNFe', '=', root.chNFe)]).id
+                            if not exists_chnfe:
+                                cnpj_forn = self._mask_cnpj(
+                                    ('%014d' % root.CNPJ))
+                                partner = self.env['res.partner'].search(
+                                    [('cnpj_cpf', '=', cnpj_forn)])
+
+                                invoice_eletronic = {
+                                    # 'nNFe': root.NFe.infNFe.ide.nNF,
+                                    'chNFe': root.chNFe,
+                                    'nSeqEvento': nfe['NSU'],
+                                    'xNome': root.xNome,
+                                    'tpNF': str(root.tpNF),
+                                    'vNF': root.vNF,
+                                    'cSitNFe': str(root.cSitNFe),
+                                    'state': 'pending',
+                                    'dataInclusao': datetime.now(),
+                                    'CNPJ': cnpj_forn,
+                                    'IE': root.IE,
+                                    'partner_id': partner.id,
+                                    'dEmi': datetime.strptime(
+                                        str(root.dhEmi)[:19],
+                                        '%Y-%m-%dT%H:%M:%S'),
+                                    'company_id': company.id,
+                                    'formInclusao': u'Verificação agendada - '
+                                                    u'manifestada por outro app'
+                                }
+
+                                obj_nfe = env_mde.create(invoice_eletronic)
+                                file_name = 'resumo_nfe-%s.xml' % nfe['NSU']
+                                self.env['ir.attachment'].create(
+                                    {
+                                        'name': file_name,
+                                        'datas': base64.b64encode(nfe['xml']),
+                                        'datas_fname': file_name,
+                                        'description': u'NFe via manifesto',
+                                        'res_model': 'nfe.mde',
+                                        'res_id': obj_nfe.id
+                                    })
 
                         company.last_nsu_nfe = nfe['NSU']
                         nfe_mdes.append(nfe)
@@ -170,5 +212,4 @@ class ResCompany(models.Model):
                             'res_model': 'l10n_br_account.document_event',
                             'res_id': obj.id
                         })
-
         return nfe_mdes
