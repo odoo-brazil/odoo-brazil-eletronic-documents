@@ -96,51 +96,55 @@ class ResCompany(models.Model):
                     for nfe in nfe_result['list_nfe']:
                         exists_nsu = self.env['nfe.mde'].search(
                                     [('nSeqEvento', '=', nfe['NSU'])]).id
+                        root = objectify.fromstring(nfe['xml'])
                         if nfe['schema'] == u'procNFe_v3.10.xsd' and \
                                 not exists_nsu:
-                            root = objectify.fromstring(nfe['xml'])
-                            cnpj_forn = self._mask_cnpj(
-                                ('%014d' % root.NFe.infNFe.emit.CNPJ))
+                            chave_nfe = root.protNFe.infProt.chNFe
+                            exists_chnfe = self.env['nfe.mde'].search(
+                                [('chNFe', '=', chave_nfe)]).id
 
-                            partner = self.env['res.partner'].search(
-                                [('cnpj_cpf', '=', cnpj_forn)])
+                            if not exists_chnfe:
+                                cnpj_forn = self._mask_cnpj(
+                                    ('%014d' % root.NFe.infNFe.emit.CNPJ))
+                                partner = self.env['res.partner'].search(
+                                    [('cnpj_cpf', '=', cnpj_forn)])
 
-                            invoice_eletronic = {
-                                'nNFe': root.NFe.infNFe.ide.nNF,
-                                'chNFe': root.protNFe.infProt.chNFe,
-                                'nSeqEvento': nfe['NSU'],
-                                'xNome': root.NFe.infNFe.emit.xNome,
-                                'tpNF': str(root.NFe.infNFe.ide.tpNF),
-                                'vNF': root.NFe.infNFe.total.ICMSTot.vNF,
-                                # 'cSitNFe': str(root.cSitNFe),
-                                'state': 'pending',
-                                'dataInclusao': datetime.now(),
-                                'CNPJ': cnpj_forn,
-                                'IE': root.NFe.infNFe.emit.IE,
-                                'partner_id': partner.id,
-                                'dEmi': datetime.strptime(
-                                    str(root.NFe.infNFe.ide.dhEmi)[:19],
-                                    '%Y-%m-%dT%H:%M:%S'),
-                                'company_id': company.id,
-                                'formInclusao': u'Verificação agendada'
-                            }
-
-                            obj_nfe = env_mde.create(invoice_eletronic)
-                            file_name = 'resumo_nfe-%s.xml' % nfe['NSU']
-                            self.env['ir.attachment'].create(
-                                {
-                                    'name': file_name,
-                                    'datas': base64.b64encode(nfe['xml']),
-                                    'datas_fname': file_name,
-                                    'description': u'NFe via manifesto',
-                                    'res_model': 'nfe.mde',
-                                    'res_id': obj_nfe.id
-                                })
+                                invoice_eletronic = {
+                                    'nNFe': root.NFe.infNFe.ide.nNF,
+                                    'chNFe': chave_nfe,
+                                    'nSeqEvento': nfe['NSU'],
+                                    'xNome': root.NFe.infNFe.emit.xNome,
+                                    'tpNF': str(root.NFe.infNFe.ide.tpNF),
+                                    'vNF': root.NFe.infNFe.total.ICMSTot.vNF,
+                                    # 'cSitNFe': str(root.cSitNFe),
+                                    'state': 'pending',
+                                    'dataInclusao': datetime.now(),
+                                    'CNPJ': cnpj_forn,
+                                    'IE': root.NFe.infNFe.emit.IE,
+                                    'partner_id': partner.id,
+                                    'dEmi': datetime.strptime(
+                                        str(root.NFe.infNFe.ide.dhEmi)[:19],
+                                        '%Y-%m-%dT%H:%M:%S'),
+                                    'company_id': company.id,
+                                    'formInclusao': u'Verificação agendada'
+                                }
+                                obj_nfe = env_mde.create(invoice_eletronic)
+                                file_name = 'resumo_nfe-%s.xml' % nfe['NSU']
+                                self.env['ir.attachment'].create(
+                                    {
+                                        'name': file_name,
+                                        'datas': base64.b64encode(nfe['xml']),
+                                        'datas_fname': file_name,
+                                        'description': u'NFe via manifesto',
+                                        'res_model': 'nfe.mde',
+                                        'res_id': obj_nfe.id
+                                    })
                         elif nfe['schema'] == 'resNFe_v1.01.xsd' and \
                                 not exists_nsu:
-                            root = objectify.fromstring(nfe['xml'])
+                            chave_nfe = root.chNFe
                             exists_chnfe = self.env['nfe.mde'].search(
-                            [('chNFe', '=', root.chNFe)]).id
+                            [('chNFe', '=', chave_nfe)]).id
+
                             if not exists_chnfe:
                                 cnpj_forn = self._mask_cnpj(
                                     ('%014d' % root.CNPJ))
@@ -149,7 +153,7 @@ class ResCompany(models.Model):
 
                                 invoice_eletronic = {
                                     # 'nNFe': root.NFe.infNFe.ide.nNF,
-                                    'chNFe': root.chNFe,
+                                    'chNFe': chave_nfe,
                                     'nSeqEvento': nfe['NSU'],
                                     'xNome': root.xNome,
                                     'tpNF': str(root.tpNF),
