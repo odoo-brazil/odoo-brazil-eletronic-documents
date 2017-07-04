@@ -203,6 +203,7 @@ class NfeMde(models.Model):
 
     @api.multi
     def action_download_xml(self):
+        result = True
         for record in self:
             validate_nfe_configuration(record.company_id)
             nfe_result = download_nfe(record.company_id, record.chNFe)
@@ -223,8 +224,9 @@ class NfeMde(models.Model):
                         'res_id': record.id
                     })
             else:
+                result = False
                 event = record._create_event(
                     'Download NFe não efetuado', nfe_result, type_event='10')
                 event = env_events.create(event)
                 record._create_attachment(event, nfe_result)
-        return True
+        return result
