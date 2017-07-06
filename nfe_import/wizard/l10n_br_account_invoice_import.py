@@ -142,7 +142,7 @@ class NfeImportAccountInvoiceImport(models.TransientModel):
                     'cfop_xml': inv_line['cfop_xml'],
                     'quantity_xml': inv_line['quantity'],
                     'unit_amount_xml': inv_line['price_unit'],
-                    'discount_total_xml': inv_line['discount_value'],
+                    'discount_total_xml': inv_line['discount'],
                     'total_amount_xml': inv_line['price_gross']
                 }
 
