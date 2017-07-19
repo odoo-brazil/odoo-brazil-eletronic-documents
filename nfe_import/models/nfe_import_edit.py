@@ -48,7 +48,7 @@ class NfeImportEdit(models.TransientModel):
                                  default=_default_company)
     currency_id = fields.Many2one(related='company_id.currency_id',
                                   string='Moeda', readonly=True)
-    xml_data = fields.Char(string="Xml Data", size=200000, readonly=True)
+    xml_data = fields.Binary(string="Xml Data", readonly=True)
     edoc_input = fields.Binary(u'Arquivo do documento eletrônico',
                                help=u'Somente arquivos no formato TXT e XML')
     file_name = fields.Char('File Name', size=128)
@@ -124,7 +124,7 @@ class NfeImportEdit(models.TransientModel):
     @api.multi
     def confirm_values(self):
         self.ensure_one()
-        inv_values = cPickle.loads(self.xml_data.encode('ascii', 'ignore'))
+        inv_values = cPickle.loads(self.xml_data)
 
         for index, item in enumerate(self.product_import_ids):
             line = inv_values['invoice_line'][index][2]
