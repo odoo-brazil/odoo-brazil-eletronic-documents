@@ -69,11 +69,9 @@ class NFeSerializer(object):
         }
         try:
             nfe_references = self._get_nfe_references()
-            ref = self.env['l10n_br_account_product.document.related'].create(
-                nfe_references)
 
             invoice_vals.update(
-                {'fiscal_document_related_ids': [(4, ref.id, None)]})
+                {'fiscal_document_related_ids': [(0, False, nfe_references)]})
         except AttributeError:
             pass
 
