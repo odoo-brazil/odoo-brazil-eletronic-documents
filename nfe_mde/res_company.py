@@ -96,7 +96,8 @@ class ResCompany(models.Model):
                     for nfe in nfe_result['list_nfe']:
                         exists_nsu = self.env['nfe.mde'].search(
                                     [('nSeqEvento', '=', nfe['NSU'])]).id
-                        root = objectify.fromstring(nfe['xml'])
+                        nfe_xml = nfe['xml'].encode('utf-8')
+                        root = objectify.fromstring(nfe_xml)
                         if nfe['schema'] == u'procNFe_v3.10.xsd' and \
                                 not exists_nsu:
                             chave_nfe = root.protNFe.infProt.chNFe
@@ -133,7 +134,7 @@ class ResCompany(models.Model):
                                 self.env['ir.attachment'].create(
                                     {
                                         'name': file_name,
-                                        'datas': base64.b64encode(nfe['xml']),
+                                        'datas': base64.b64encode(nfe_xml),
                                         'datas_fname': file_name,
                                         'description': u'NFe via manifesto',
                                         'res_model': 'nfe.mde',
@@ -177,7 +178,7 @@ class ResCompany(models.Model):
                                 self.env['ir.attachment'].create(
                                     {
                                         'name': file_name,
-                                        'datas': base64.b64encode(nfe['xml']),
+                                        'datas': base64.b64encode(nfe_xml),
                                         'datas_fname': file_name,
                                         'description': u'NFe via manifesto',
                                         'res_model': 'nfe.mde',
