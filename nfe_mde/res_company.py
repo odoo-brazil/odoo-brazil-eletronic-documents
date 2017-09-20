@@ -62,7 +62,7 @@ class ResCompany(models.Model):
         ]
         last_dist_dfe = self.env[doc_event_model].search(
             last_dist_dfe_domain,
-            order='create_date desc',
+            order='id desc',
             limit=1
         )
         for dfe in last_dist_dfe:
@@ -88,8 +88,8 @@ class ResCompany(models.Model):
                 )
                 nfe_result = distribuicao_nfe(
                     company, last_nsu)
-                _logger.info('%s.query_nfe_batch(), lastNSU: %s:\n%s',
-                             company, last_nsu, pformat(nfe_result))
+                _logger.info('%s.query_nfe_batch(), lastNSU: %s',
+                             company, last_nsu)
             except Exception:
                 _logger.error("Erro ao consultar Manifesto", exc_info=True)
                 if raise_error:
