@@ -18,6 +18,7 @@
 ###############################################################################
 import base64
 import logging
+from pprint import pformat
 import re
 from datetime import datetime
 from lxml import objectify
@@ -30,11 +31,15 @@ from .service.mde import distribuicao_nfe
 
 _logger = logging.getLogger(__name__)
 
+NFE_NAMESPACE_MAP = dict(
+    nfe='http://www.portalfiscal.inf.br/nfe',
+)
+
 
 class ResCompany(models.Model):
     _inherit = 'res.company'
 
-    last_nsu_nfe = fields.Char(string="Último NSU usado", size=20, default='0')
+    last_nsu_nfe = fields.Char(string="Forçar NSU", size=20, default='0')
 
     @staticmethod
     def _mask_cnpj(cnpj):
@@ -46,15 +51,45 @@ class ResCompany(models.Model):
         return cnpj
 
     @api.multi
+    def get_last_dfe_nsu(self):
+        self.ensure_one()
+        last_nsu = 0L
+        doc_event_model = 'l10n_br_account.document_event'
+        last_dist_dfe_domain = [
+            ('company_id', '=', self.id),
+            ('type', '=', u'12'),
+            ('status', 'in', ['137', '138']),
+        ]
+        last_dist_dfe = self.env[doc_event_model].search(
+            last_dist_dfe_domain,
+            order='create_date desc',
+            limit=1
+        )
+        for dfe in last_dist_dfe:
+            xml = objectify.fromstring(self.env['ir.attachment'].search([
+                ('res_model', '=', doc_event_model),
+                ('res_id', '=', dfe.id),
+            ]).datas.decode('base64'))
+            [last_nsu] = [long(node) for node in xml.xpath(
+                '/nfe:retDistDFeInt/nfe:ultNSU/text()',
+                namespaces=NFE_NAMESPACE_MAP,
+            )]
+        return last_nsu
+
+    @api.multi
     def query_nfe_batch(self, raise_error=False):
         nfe_mdes = []
         for company in self:
             try:
                 validate_nfe_configuration(company)
-                last_nsu = self.env['nfe.mde'].search(
-                    [], order='nSeqEvento desc', limit=1).nSeqEvento
+                last_nsu = (
+                    long(company.last_nsu_nfe) if company.last_nsu_nfe
+                    else company.get_last_dfe_nsu()
+                )
                 nfe_result = distribuicao_nfe(
-                    company, min(last_nsu, company.last_nsu_nfe))
+                    company, last_nsu)
+                _logger.info('%s.query_nfe_batch(), lastNSU: %s:\n%s',
+                             company, last_nsu, pformat(nfe_result))
             except Exception:
                 _logger.error("Erro ao consultar Manifesto", exc_info=True)
                 if raise_error:
@@ -63,6 +98,10 @@ class ResCompany(models.Model):
                         u'Não foi possivel efetuar a consulta!\n '
                         u'Verifique o log')
             else:
+                if company.last_nsu_nfe:
+                    # do this here instead of in get_last_dfe_nsu() in case the
+                    # exception gets swallowed in the `except` above.
+                    company.sudo().last_nsu_nfe = ''
                 env_events = self.env['l10n_br_account.document_event']
 
                 if nfe_result['code'] == '137' or nfe_result['code'] == '138':
@@ -185,7 +224,6 @@ class ResCompany(models.Model):
                                         'res_id': obj_nfe.id
                                     })
 
-                        company.last_nsu_nfe = nfe['NSU']
                         nfe_mdes.append(nfe)
                 else:
 
