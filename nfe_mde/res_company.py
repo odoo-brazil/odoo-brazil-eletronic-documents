@@ -134,7 +134,9 @@ class ResCompany(models.Model):
                     env_mde = self.env['nfe.mde']
                     for nfe in nfe_result['list_nfe']:
                         exists_nsu = self.env['nfe.mde'].search(
-                                    [('nSeqEvento', '=', nfe['NSU'])]).id
+                                    [('nSeqEvento', '=', nfe['NSU']),
+                                     ('company_id', '=', company.id),
+                                     ]).id
                         nfe_xml = nfe['xml'].encode('utf-8')
                         root = objectify.fromstring(nfe_xml)
                         if nfe['schema'] == u'procNFe_v3.10.xsd' and \
