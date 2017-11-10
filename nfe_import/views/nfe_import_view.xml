@@ -28,6 +28,7 @@
                                    options="{'currency_field': 'currency_id'}"/>
                             <field name="create_product"
                                    attrs="{'invisible': [('import_from_invoice', '!=', False)]}"/>
+                            <field name="create_suplierinfo" />
                             <field name="product_category_id"
                                    attrs="{'invisible': ['|', ('create_product', '=', False), ('import_from_invoice', '!=', False)] }"/>
                         </group>
