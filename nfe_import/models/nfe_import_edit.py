@@ -78,6 +78,12 @@ class NfeImportEdit(models.TransientModel):
         u'Criar produtos automaticamente?', default=True,
         help=u'Cria o produto automaticamente caso não seja informado um')
 
+    create_suplierinfo = fields.Boolean(
+        u'Criar informações de fornecedor automaticamente?', default=False,
+        help=u'Cria informações do fornecedor '
+             u'automaticamente caso não seja informado um'
+    )
+
     product_category_id = fields.Many2one('product.category',
                                           u'Categoria Produto',
                                           default=_default_category)
@@ -143,12 +149,14 @@ class NfeImportEdit(models.TransientModel):
                         product_created.categ_id.
                         property_account_income_categ.id)
 
-                    self.env['product.supplierinfo'].create({
-                        'name': self.supplier_id.id,
-                        'product_name': item.product_xml,
-                        'product_code': item.code_product_xml,
-                        'product_tmpl_id': item.product_id.product_tmpl_id.id
-                    })
+                    if self.create_suplierinfo:
+                        self.env['product.supplierinfo'].create({
+                            'name': self.supplier_id.id,
+                            'product_name': item.product_xml,
+                            'product_code': item.code_product_xml,
+                            'product_tmpl_id':
+                                item.product_id.product_tmpl_id.id
+                        })
 
             else:
                 line['product_id'] = item.product_id.id
@@ -158,17 +166,19 @@ class NfeImportEdit(models.TransientModel):
                 line['uos_id'] = item.uom_id.id
                 line['cfop_id'] = item.cfop_id.id
 
-                total_recs = self.env['product.supplierinfo'].search_count(
-                    [('name', '=', self.supplier_id.id),
-                     ('product_code', '=', item.code_product_xml)]
-                )
-                if total_recs == 0:
-                    self.env['product.supplierinfo'].create({
-                        'name': self.supplier_id.id,
-                        'product_name': item.product_xml,
-                        'product_code': item.code_product_xml,
-                        'product_tmpl_id': item.product_id.product_tmpl_id.id
-                    })
+                if self.create_suplierinfo:
+                    total_recs = self.env['product.supplierinfo'].search_count(
+                        [('name', '=', self.supplier_id.id),
+                         ('product_code', '=', item.code_product_xml)]
+                    )
+                    if total_recs == 0:
+                        self.env['product.supplierinfo'].create({
+                            'name': self.supplier_id.id,
+                            'product_name': item.product_xml,
+                            'product_code': item.code_product_xml,
+                            'product_tmpl_id':
+                                item.product_id.product_tmpl_id.id
+                        })
 
             inv_values['invoice_line'][index][2].update(
                 self.fiscal_position.fiscal_position_map(line)
