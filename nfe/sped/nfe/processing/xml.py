@@ -37,7 +37,7 @@ _logger = logging.getLogger(__name__)
 try:
     from pysped.nfe.leiaute import ProcEventoCCe_100
     from pysped.nfe.danfe import DANFE
-    from pysped.nfe.danfe import DAEDE
+    from pysped.nfe.danfe.daede import DAEDE
 except ImportError as exc:
     logging.exception(exc.message)
 
