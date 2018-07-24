@@ -36,8 +36,8 @@ _logger = logging.getLogger(__name__)
 
 try:
     from pysped.nfe.leiaute import ProcEventoCCe_100
-    from pysped.nfe.danfe import DANFE
-    from pysped.nfe.danfe import DAEDE
+    from pysped.nfe.danfe.danfe_geraldo import DANFE
+    from pysped.nfe.danfe.daede import DAEDE
 except ImportError as exc:
     logging.exception(exc.message)
 
@@ -151,6 +151,9 @@ def print_danfe(invoices):
         elif inv.nfe_version == '3.10':
             from pysped.nfe.leiaute import ProcNFe_310
             procnfe = ProcNFe_310()
+        elif inv.nfe_version == '4.00':
+            from pysped.nfe.leiaute import ProcNFe_400
+            procnfe = ProcNFe_400()
 
         file_xml = monta_caminho_nfe(inv.company_id, inv.nfe_access_key)
         if inv.state not in ('open', 'paid', 'sefaz_cancelled'):
