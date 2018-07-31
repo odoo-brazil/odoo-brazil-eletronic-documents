@@ -382,7 +382,8 @@ class NFeSerializer(object):
         inv_line['freight_value'] = float(self.det.prod.vFrete.valor)
         inv_line['insurance_value'] = float(self.det.prod.vSeg.valor)
         inv_line['discount'] = (
-            (float(self.det.prod.vDesc.valor)/inv_line['price_gross']) * 100)
+            (float(self.det.prod.vDesc.valor)/inv_line['price_gross']) * 100)\
+            if inv_line['price_gross'] else float(0)
         inv_line['other_costs_value'] = float(self.det.prod.vOutro.valor)
 
         # Código do serviço não vai existir se for produto
