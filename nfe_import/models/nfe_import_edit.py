@@ -230,7 +230,7 @@ class NfeImportEdit(models.TransientModel):
                         'diferente da que consta no XML fornecido.')
 
             vals = {
-                'vendor_serie': inv_values['vendor_serie'],
+                'serie_nfe': inv_values['serie_nfe'],
                 'fiscal_document_id': inv_values['fiscal_document_id'],
                 'date_hour_invoice': inv_values['date_hour_invoice'],
                 'date_in_out': inv_values['date_in_out'],
@@ -319,7 +319,7 @@ class NfeImportEdit(models.TransientModel):
         picking_vals = {
             'name': '/',
             'origin': 'Fatura: %s-%s' % (invoice.internal_number,
-                                         invoice.vendor_serie),
+                                         invoice.serie_nfe),
             'partner_id': invoice.partner_id.id,
             'invoice_state': 'invoiced',
             'fiscal_category_id': invoice.fiscal_category_id.id,
