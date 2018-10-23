@@ -21,33 +21,44 @@ import os
 import commands
 import base64
 
-from odoo.osv import orm, fields
+from odoo import models, fields
 from odoo.addons.nfe.tools.misc import mount_path_nfe
 
 
-class NfeXmlPeriodicExport(orm.TransientModel):
+class NfeXmlPeriodicExport(models.TransientModel):
 
     _name = 'nfe.xml.periodic.export'
     _description = 'Export NFes'
-    _columns = {
-        'name': fields.char('Nome', size=255),
-        'start_period_id': fields.many2one('account.period',
-                                           u'Período Inicial'),
-        'stop_period_id': fields.many2one('account.period',
-                                          u'Período Final'),
-        'zip_file': fields.binary('Zip Files', readonly=True),
-        'state': fields.selection([('init', 'init'),
-                                   ('done', 'done')], 'state', readonly=True),
-        'export_type': fields.selection([('nfe', 'NF-e'),
-                                         ('all', 'Tudo')],
-                                        'Exportar',
-                                        required=True),
-    }
 
-    _defaults = {
-        'state': 'init',
-        'export_type': 'nfe',
-    }
+    name = fields.Char(
+        'Nome', size=255
+    )
+    start_period_id = fields.Many2one(
+        'account.period',
+        u'Período Inicial'
+    )
+    stop_period_id = fields.Many2one(
+        'account.period',
+        u'Período Final'
+    )
+    zip_file = fields.Binary(
+        'Zip Files',
+        readonly=True
+    )
+    state = fields.Selection(
+        [('init', 'init'),
+         ('done', 'done')],
+        'state',
+        readonly=True,
+        default='init',
+    )
+    export_type = fields.Selection(
+        [('nfe', 'NF-e'),
+         ('all', 'Tudo')],
+        'Exportar',
+        required=True,
+        default='nfe',
+    )
 
     def done(self, cr, uid, ids, context=False):
         return True

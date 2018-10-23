@@ -20,13 +20,13 @@
 import os
 import base64
 import commands
-from odoo.osv import osv, orm, fields
+from odoo import models, fields
 from odoo.tools.translate import _
 from odoo.addons.nfe.sped.nfe.processing.xml import monta_caminho_nfe, \
     monta_caminho_inutilizacao
 
 
-class AccountInvoiceInvalidNumber(orm.Model):
+class AccountInvoiceInvalidNumber(models.Model):
     _inherit = 'l10n_br_account.invoice.invalid.number'
 
     def attach_file_event(self, cr, uid, ids, seq, att_type, ext, context):
@@ -81,7 +81,7 @@ class AccountInvoiceInvalidNumber(orm.Model):
         return True
 
 
-class AccountInvoice(orm.Model):
+class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
     def attach_file_event(self, cr, uid, ids, seq, att_type, ext, context):
@@ -188,8 +188,8 @@ class AccountInvoice(orm.Model):
         }
 
 
-class email_template(osv.Model):
-    _inherit = 'email.template'
+class mail_template(models.Model):
+    _inherit = 'mail.template'
 
     def generate_email_batch(self, cr, uid, template_id, res_id,
                              context=None, fields=None):
@@ -209,9 +209,7 @@ class email_template(osv.Model):
         return values
 
 
-class res_company(osv.Model):
+class res_company(models.Model):
     _inherit = 'res.company'
 
-    _columns = {
-        'nfe_email': fields.text('Observação em Email NFe'),
-    }
+    nfe_email = fields.Text('Observação em Email NFe')
