@@ -21,10 +21,10 @@
 
 import cPickle
 
-from openerp import api, fields, models
-from openerp.addons.product.product import check_ean
-from openerp.exceptions import Warning as UserError
-from openerp.tools.translate import _
+from odoo import api, fields, models
+from odoo.addons.product.product import check_ean
+from odoo.exceptions import Warning as UserError
+from odoo.tools.translate import _
 
 
 class NfeImportEdit(models.TransientModel):

@@ -24,10 +24,10 @@ from __future__ import with_statement
 import base64
 from StringIO import StringIO
 
-from openerp import pooler
-from openerp.exceptions import Warning as UserError
-from openerp.report.interface import report_int
-from openerp.report.render import render
+from odoo import pooler
+from odoo.exceptions import Warning as UserError
+from odoo.report.interface import report_int
+from odoo.report.render import render
 from pyPdf import PdfFileReader, PdfFileWriter
 
 

@@ -21,8 +21,8 @@ import os
 import commands
 import base64
 
-from openerp.osv import orm, fields
-from openerp.addons.nfe.tools.misc import mount_path_nfe
+from odoo.osv import orm, fields
+from odoo.addons.nfe.tools.misc import mount_path_nfe
 
 
 class NfeXmlPeriodicExport(orm.TransientModel):

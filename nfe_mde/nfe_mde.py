@@ -21,10 +21,10 @@
 import base64
 from datetime import datetime
 
-from openerp import models, api, fields, _
-from openerp.addons.nfe.sped.nfe.validator.config_check import \
+from odoo import models, api, fields, _
+from odoo.addons.nfe.sped.nfe.validator.config_check import \
     validate_nfe_configuration
-from openerp.exceptions import ValidationError
+from odoo.exceptions import ValidationError
 
 from .service.mde import download_nfe, send_event
 

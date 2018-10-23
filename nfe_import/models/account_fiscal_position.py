@@ -20,8 +20,8 @@
 ###############################################################################
 
 
-from openerp import api, fields, models, _
-from openerp.exceptions import Warning as UserError, except_orm
+from odoo import api, fields, models, _
+from odoo.exceptions import Warning as UserError, except_orm
 
 TOO_MANY_FISCAL_POSITIONS_MSG = _(
     u'''Fiscal Category {fc.name} ({fc!r}) has multiple Fiscal Positions

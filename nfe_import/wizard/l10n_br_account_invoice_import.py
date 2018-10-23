@@ -26,10 +26,10 @@ import cPickle
 import logging
 import os
 
-from openerp import models, fields, api
-from openerp.addons.nfe.sped.nfe.nfe_factory import NfeFactory
-from openerp.exceptions import Warning as UserError
-from openerp.tools.translate import _
+from odoo import models, fields, api
+from odoo.addons.nfe.sped.nfe.nfe_factory import NfeFactory
+from odoo.exceptions import Warning as UserError
+from odoo.tools.translate import _
 
 from ..service.nfe_serializer import NFeSerializer
 

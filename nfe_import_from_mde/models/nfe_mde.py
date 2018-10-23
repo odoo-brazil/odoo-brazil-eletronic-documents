@@ -18,8 +18,8 @@
 #                                                                             #
 ###############################################################################
 
-from openerp import models, api, fields
-from openerp.exceptions import Warning as UserError
+from odoo import models, api, fields
+from odoo.exceptions import Warning as UserError
 
 
 class NfeMde(models.Model):

@@ -20,7 +20,7 @@
 ###############################################################################
 
 from mock import patch
-from openerp.tests import common
+from odoo.tests import common
 
 
 class TestNfeMde(common.TransactionCase):

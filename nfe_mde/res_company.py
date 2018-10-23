@@ -23,10 +23,10 @@ import re
 from datetime import datetime
 from lxml import objectify
 
-from openerp import models, api, fields
-from openerp.addons.nfe.sped.nfe.validator.config_check import \
+from odoo import models, api, fields
+from odoo.addons.nfe.sped.nfe.validator.config_check import \
     validate_nfe_configuration
-from openerp.exceptions import Warning as UserError
+from odoo.exceptions import Warning as UserError
 from .service.mde import distribuicao_nfe
 
 _logger = logging.getLogger(__name__)

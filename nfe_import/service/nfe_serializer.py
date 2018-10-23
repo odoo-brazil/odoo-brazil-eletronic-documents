@@ -27,9 +27,9 @@ import tempfile
 from datetime import datetime
 from decimal import Decimal
 
-from openerp import tools
-from openerp.tools.translate import _
-from openerp.exceptions import Warning as UserError
+from odoo import tools
+from odoo.tools.translate import _
+from odoo.exceptions import Warning as UserError
 
 try:
     from pysped.nfe.leiaute.consrecinfe_310 import ProtNFe

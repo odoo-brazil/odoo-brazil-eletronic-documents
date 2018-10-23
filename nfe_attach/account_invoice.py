@@ -20,9 +20,9 @@
 import os
 import base64
 import commands
-from openerp.osv import osv, orm, fields
-from openerp.tools.translate import _
-from openerp.addons.nfe.sped.nfe.processing.xml import monta_caminho_nfe, \
+from odoo.osv import osv, orm, fields
+from odoo.tools.translate import _
+from odoo.addons.nfe.sped.nfe.processing.xml import monta_caminho_nfe, \
     monta_caminho_inutilizacao
 
 
