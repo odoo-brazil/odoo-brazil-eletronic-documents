@@ -22,7 +22,6 @@
 import cPickle
 
 from odoo import api, fields, models
-from odoo.addons.product.product import check_ean
 from odoo.exceptions import Warning as UserError
 from odoo.tools.translate import _
 
@@ -298,7 +297,7 @@ class NfeImportEdit(models.TransientModel):
         if default_category:
             vals['categ_id'] = default_category.id
 
-        if check_ean(line['ean_xml']):
+        if self.env['barcode.nomenclature'].check_ean(line['ean_xml']):
             vals['ean13'] = line['ean_xml']
 
         if item_grid.uom_id:

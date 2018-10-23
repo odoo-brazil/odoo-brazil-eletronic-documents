@@ -34,6 +34,7 @@
         ],
     },
     'depends': [
+        'barcodes',
         'nfe',
     ],
     'data': [
@@ -45,6 +46,6 @@
     'css': [
         'static/src/css/nfe_import.css'
     ],
-    'installable': False,
+    'installable': True,
     "auto_install": False,
 }

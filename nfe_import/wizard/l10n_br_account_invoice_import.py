@@ -65,7 +65,7 @@ class NfeImportAccountInvoiceImport(models.TransientModel):
     @api.onchange('account_invoice_id')
     def onchange_account_invoice(self):
         self.fiscal_category_id = self.account_invoice_id.fiscal_category_id.id
-        self.fiscal_position = self.account_invoice_id.fiscal_position.id
+        self.fiscal_position = self.account_invoice_id.fiscal_position_id
 
     def _check_extension(self, filename):
         if not filename:
