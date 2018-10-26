@@ -24,7 +24,6 @@ from __future__ import with_statement
 import base64
 from StringIO import StringIO
 
-from odoo import pooler
 from odoo.exceptions import Warning as UserError
 from odoo.report.interface import report_int
 from odoo.report.render import render
@@ -72,10 +71,8 @@ class ExternalPdf(render):
 class CustomReportDanfe(report_int):
     def create(self, cr, uid, ids, datas, context=None):
 
-        pool = pooler.get_pool(cr.dbname)
-
-        nfe_obj = pool['nfe.mde']
-        attach_obj = pool['ir.attachment']
+        nfe_obj = self.env['nfe.mde']
+        attach_obj = self.env['ir.attachment']
         nfe_mde = nfe_obj.browse(cr, uid, ids, context=context)
         attach_ids = attach_obj.search(cr, uid, [
             ('res_id', '=', nfe_mde.id),
