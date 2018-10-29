@@ -34,16 +34,11 @@ class AccountInvoiceInvalidNumber(models.Model):
         if seq is None:
             seq = 1
         # monta_caminho_inutilizacao
-        for obj in self.browse(cr, uid, ids):
-            company_pool = self.pool.get('res.company')
-            company = company_pool.browse(cr, uid, obj.company_id.id)
+        for obj in self:
+            company = obj.company_id
             number_start = obj.number_start
             number_end = obj.number_end
-            number_serie = self.browse(
-                cr,
-                uid,
-                ids,
-                context)[0].document_serie_id.code
+            number_serie = self.document_serie_id.code
 
             if att_type == 'inu':
                 save_dir = monta_caminho_inutilizacao(
@@ -59,20 +54,19 @@ class AccountInvoiceInvalidNumber(models.Model):
                 key = arquivo[-49:-8]
                 str_aux = arquivo[-49:]
 
-            obj_attachment = self.pool.get('ir.attachment')
 
             try:
                 file_attc = open(arquivo, 'r')
                 attc = file_attc.read()
 
-                obj_attachment.create(cr, uid, {
+                self.env['ir.attachment'].create({
                     'name': str_aux.format(key),
                     'datas': base64.b64encode(attc),
                     'datas_fname': str_aux.format(key),
                     'description': '' or _('No Description'),
                     'res_model': 'l10n_br_account.invoice.invalid.number',
                     'res_id': obj.id
-                }, context=context)
+                })
             except IOError:
                 key = 'erro'
             else:
