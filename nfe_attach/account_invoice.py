@@ -29,7 +29,7 @@ from odoo.addons.nfe.sped.nfe.processing.xml import monta_caminho_nfe, \
 class AccountInvoiceInvalidNumber(models.Model):
     _inherit = 'l10n_br_account.invoice.invalid.number'
 
-    def attach_file_event(self, cr, uid, ids, seq, att_type, ext, context):
+    def attach_file_event(self, seq, att_type, ext):
 
         if seq is None:
             seq = 1
@@ -84,14 +84,13 @@ class AccountInvoiceInvalidNumber(models.Model):
 class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
-    def attach_file_event(self, cr, uid, ids, seq, att_type, ext, context):
+    def attach_file_event(self, seq, att_type, ext):
 
         if seq is None:
             seq = 1
 
-        for inv in self.browse(cr, uid, ids):
-            company_pool = self.pool.get('res.company')
-            company = company_pool.browse(cr, uid, inv.company_id.id)
+        for inv in self:
+            company = inv.company_id
             nfe_key = inv.nfe_access_key
 
             if att_type != 'nfe' and att_type is not None:
@@ -118,13 +117,12 @@ class AccountInvoice(models.Model):
                         chave_nfe=nfe_key) +
                     str_aux)
 
-            obj_attachment = self.pool.get('ir.attachment')
 
             try:
                 file_attc = open(save_dir, 'r')
                 attc = file_attc.read()
 
-                obj_attachment.create(cr, uid, {
+                self.env['ir.attachment'].create({
                     'name': str_aux.format(nfe_key),
                     'datas': base64.b64encode(attc),
                     'datas_fname': str_aux.format(nfe_key),
@@ -132,7 +130,7 @@ class AccountInvoice(models.Model):
                     'res_model': 'account.invoice',
                     'res_id': inv.id,
                     'type': 'binary',
-                }, context=context)
+                })
             except IOError:
                 pass
             else:
