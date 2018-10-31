@@ -55,7 +55,7 @@
 
         <menuitem id="menu_l10n_br_accouunt_periodic_processing_nfe_export"
                   name="Verificar NFe para download"
-                  parent="nfe_attach.menu_l10n_br_account_processamento_periodico"
+                  parent="nfe.menu_l10n_br_account_processamento_periodico"
                   action="action_nfe_schedule_download_nfe"/>
 
     </data>
