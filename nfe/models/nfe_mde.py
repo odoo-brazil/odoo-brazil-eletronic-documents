@@ -26,7 +26,7 @@ from odoo.addons.nfe.sped.nfe.validator.config_check import \
     validate_nfe_configuration
 from odoo.exceptions import ValidationError
 
-from .service.mde import download_nfe, send_event
+from ..service.mde import download_nfe, send_event
 
 
 class L10nBrDocumentEvent(models.Model):
